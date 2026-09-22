@@ -1,0 +1,199 @@
+# --------------------------------------------------------------------------
+# PartylinePager docs site - built by squidfunk/mkdocs-material
+#
+# This file is mounted into the container by docker-compose.yml in this
+# same folder.  Run from the project root, not from here:
+#
+#   docker compose -f docs/website/docker-compose.yml up serve     # preview
+#   docker compose -f docs/website/docker-compose.yml run --rm build  # HTML
+#
+# See docs/website/README.md for the full explanation.
+# --------------------------------------------------------------------------
+
+site_name: PartylinePager
+site_description: Deploy, operate, and extend PartylinePager.
+
+# site_url is set automatically by CI (GitHub Actions / GitLab CI)
+# using the repo's Pages URL. You do NOT need to edit this line.
+# For local preview it can be blank; mkdocs serve ignores it.
+#
+# Custom domain? Don't set it here. The CI workflows handle it.
+# You have three options (all set via the CI files, not here):
+#
+#   1. Workflow input   - type your domain when you click "Run
+#                         workflow" in the GitHub Actions UI
+#   2. Repo variable    - set DOCS_CNAME in your repo settings
+#                         (GitHub: Settings > Variables; GitLab:
+#                         Settings > CI/CD > Variables)
+#   3. Edit the CI file - set DOCS_CNAME in the env/variables
+#                         block of .github/workflows/docs.yml
+#                         or .gitlab-ci.yml
+#
+# Full instructions with examples:
+#   docs/development/building-testing.md  (section: "Custom domain")
+#   .github/workflows/docs.yml           (header comments)
+#   .gitlab-ci.yml                        (pages job comments)
+site_url: ""
+
+# docs_dir / site_dir are container paths, not host paths.
+# docker-compose.yml bind-mounts docs/ -> /docs (read-only) and
+# ./site/ -> /site, so a build can never write into the source tree.
+docs_dir: /docs
+site_dir: /site
+
+# This folder (docs/website/) holds build tooling, not doc content.
+# Exclude its renderable files so nothing here becomes a page. The theme
+# assets under website/assets/ are deliberately NOT excluded: theme.logo
+# and extra_css point at files there, and they must reach the build output.
+exclude_docs: |
+  website/**/*.md
+  website/*.yml
+  website/*.yaml
+
+
+# -- Theme -------------------------------------------------------------------
+
+theme:
+  name: material
+  logo: website/assets/logo.svg    # the pager artwork; see website/assets/
+  favicon: website/assets/logo.svg
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom      # brand tokens in assets/stylesheets/extra.css
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Inter            # clean, modern - try also: Source Sans 3, Nunito, DM Sans
+    code: JetBrains Mono   # or: Fira Code, Source Code Pro
+  features:
+    - navigation.instant   # XHR page loads, no full reload - keeps scroll position
+    - navigation.top       # "back to top" button on scroll-up
+    - navigation.tracking  # URL hash updates as you scroll through anchors
+    - navigation.tabs      # moves top-level nav to a tab bar - declutters sidebar
+    - navigation.sections  # section headers in sidebar are bold, non-collapsible -
+                           # keeps the Getting Started / Configuration / Reference
+                           # groups always visible so users see scope at a glance
+    - toc.integrate        # folds right-hand TOC INTO left sidebar. one column only.
+                           # trade-off: loses the dedicated right column, but the
+                           # sidebar is wide enough for this doc set
+    - content.code.copy    # clipboard button on every code block
+
+
+# -- Plugins ------------------------------------------------------------------
+
+plugins:
+  - search                 # built-in full-text search, no config needed
+
+
+# -- Custom CSS ------------------------------------------------------------
+
+# Brand tokens, header gradient, light-mode tint, and homepage hero styles.
+# See assets/ in this folder; excluded from site rendering by exclude_docs
+# above but copied into the build because extra_css references them.
+extra_css:
+  - website/assets/stylesheets/extra.css
+
+
+# -- Markdown extensions ------------------------------------------------------
+# Each extension adds syntax to .md files.  If you remove one, grep docs/ for
+# its syntax first so pages don't break silently.
+
+markdown_extensions:
+  - tables                         # pipe tables: | col | col |
+  - toc:
+      permalink: true              # anchor link icon on every heading
+  - admonition                     # callout boxes: !!! note "Title" / !!! warning
+                                   # also: tip, example, danger, bug, quote, abstract
+  - pymdownx.details               # collapsible admonitions: ??? note "Click me"
+                                   # open by default: ???+ note "Already open"
+  - pymdownx.highlight:
+      anchor_linenums: true        # linkable line numbers in code blocks
+  - pymdownx.superfences:           # fenced code blocks inside admonitions and tabs
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.inlinehilite          # inline code with language: `#!python print("hi")`
+  - pymdownx.tabbed:
+      alternate_style: true        # tabbed content blocks: === "Tab 1" / === "Tab 2"
+                                   # used in chat-network setup pages to show Full vs Standard
+                                   # config side by side. alternate_style is required
+                                   # for Material theme compatibility.
+
+
+# -- Navigation ---------------------------------------------------------------
+# Audience tiers, front to back:
+#
+#   Getting Started  -> Unraid users first (copy-paste), then compose, then manual.
+#                       Lowest barrier to entry up front.
+#   Configuration    -> Self-hosters who got it running and want to tune.
+#                       Policy, adapters, compose overlays, per-network setup.
+#   Usage            -> Day-to-day: subscriber commands, admin CLI, upgrades.
+#   Reference        -> Deep cuts: hook contracts, message format, state files,
+#                       security model, supply-chain tooling.
+#   Development      -> Contributors: build, test, design decisions, trifecta.
+#   Troubleshooting  -> Standalone so it's findable from any tier.
+#   Roadmap          -> What's coming, what's not.
+#
+# Pages not listed here still build and are reachable by direct URL,
+# but won't appear in the sidebar.  Add new pages to keep them navigable.
+
+nav:
+  - Home: index.md
+
+  - Getting Started:
+      - Pick your path: getting-started/index.md
+      - Unraid / full image: getting-started/unraid.md
+      - Compose quickstart: getting-started/quickstart.md
+      - Manual install: getting-started/manual-install.md
+
+  - Configuration:
+      - Policy reference: configuration/policy.md
+      - Adapters overview: configuration/adapters.md
+      - Compose overlays: configuration/compose-files.md
+      - Chat Networks:
+          - Telegram: configuration/chat-networks/telegram.md
+          - Matrix: configuration/chat-networks/matrix.md
+          - Signal: configuration/chat-networks/signal.md
+          - IRC: configuration/chat-networks/irc.md
+          - XMPP: configuration/chat-networks/xmpp.md
+          - Mastodon: configuration/chat-networks/mastodon.md
+          - Email: configuration/chat-networks/email.md
+          - Mattermost: configuration/chat-networks/mattermost.md
+          - Discord: configuration/chat-networks/discord.md
+          - Apprise: configuration/chat-networks/apprise.md
+
+  - Usage:
+      - Commands: usage/commands.md
+      - Administration: usage/administration.md
+      - Upgrading: usage/upgrading.md
+
+  - Reference:
+      - Provider hooks: reference/provider-hooks.md
+      - Message rendering: reference/message-rendering.md
+      - State files: reference/state-files.md
+      - Security model: reference/security-model.md
+      - Supply chain: reference/supply-chain.md
+      - Architecture: reference/architecture.md
+
+  - Development:
+      - Building and testing: development/building-testing.md
+      - Design decisions: development/design-decisions.md
+      - The trifecta: development/trifecta.md
+      - Architecture detail: development/architecture-detail.md
+
+  - Troubleshooting: troubleshooting.md
+  - Community: community.md
+  - Roadmap: roadmap.md

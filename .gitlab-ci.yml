@@ -1,0 +1,486 @@
+# =========================================================================
+# GitLab CI/CD Pipeline
+# =========================================================================
+#
+# QUICK START
+#   Everything runs only when you click CI/CD > Pipelines > "New
+#   pipeline" and pick a WORKFLOW from the dropdown. This mirrors
+#   GitHub's three separate workflow buttons:
+#
+#     Test & Audit   (default)   unit tests + supply-chain audit +
+#                                image build checks
+#     Build & Publish             tests + builds, then press play
+#                                on push-registries; needs
+#                                RELEASE_VERSION (e.g. 1.0.0)
+#     Deploy Docs                 builds + deploys the docs site;
+#                                optional DOCS_CNAME for a custom
+#                                domain
+#
+#   Dependency-file merge requests additionally auto-run the Test
+#   & Audit jobs, like GitHub ci.yml's pull_request: paths filter.
+#   Nothing ever runs on a plain push.
+#
+# -------------------------------------------------------------------------
+# STAGES
+# -------------------------------------------------------------------------
+#
+#   test      Runs for manual "test"/"release" runs and dependency
+#             MRs. Builds the test image, then runs unit-tests and
+#             supply-chain-audit in parallel.
+#
+#   build     Runs for manual "test"/"release" runs and dependency
+#             MRs. Builds both Docker images (V2 compose + V1 full)
+#             to verify they compile. Nothing is pushed. This is
+#             the "dry run" equivalent of ci.yml's build jobs.
+#
+#   release   Only for the Build & Publish workflow. Play the
+#             push-registries button to build and push images.
+#             Requires RELEASE_VERSION (e.g. "1.0.0", no "v").
+#
+#   pages     Only for the Deploy Docs workflow. Builds the
+#             MkDocs Material site and deploys to GitLab Pages.
+#             Set DOCS_CNAME to use a custom domain.
+#
+# -------------------------------------------------------------------------
+# REGISTRIES
+# -------------------------------------------------------------------------
+#
+# GitLab Container Registry
+#   Enabled by default. No setup needed.
+#   Authenticates automatically via CI_REGISTRY_* variables (built
+#   in to every GitLab project, including forks).
+#   Images land at: registry.gitlab.com/<namespace>/<project>
+#
+# Docker Hub
+#   Optional. Set PUSH_DOCKERHUB to "false" to skip.
+#   Requires two CI/CD variables:
+#     Settings > CI/CD > Variables > Add variable
+#
+#     DOCKERHUB_USERNAME   your Docker Hub username
+#     DOCKERHUB_TOKEN      a Personal Access Token (NOT your password)
+#                          Create one: hub.docker.com > Account Settings >
+#                          Security > Access Tokens
+#
+#   Images land at: <DOCKERHUB_USERNAME>/<image-name>
+#   If DOCKERHUB_USERNAME is not set, falls back to the GitLab
+#   project namespace ($CI_PROJECT_NAMESPACE).
+#
+# GitHub Container Registry
+#   NOT handled here. Use .github/workflows/release.yml for GHCR.
+#   Each CI platform pushes only to its own native registry.
+#
+# -------------------------------------------------------------------------
+# WHAT GETS BUILT
+# -------------------------------------------------------------------------
+#
+# Two images in the release stage:
+#
+#   partylinepager        V2 modular image (docker-compose deployment)
+#                         Built from: ./Dockerfile
+#
+#   partylinepager-full   V1 all-in-one image (single container)
+#                         Built from: deploy/Dockerfile.full
+#
+# Both get tagged with :latest and :<version> on each registry.
+#
+# -------------------------------------------------------------------------
+# SELF-HOSTED REGISTRY
+# -------------------------------------------------------------------------
+# Uncomment the marked sections below to add a private registry.
+# Set these as CI/CD variables:
+#   SELFHOSTED_USERNAME    registry login
+#   SELFHOSTED_TOKEN       registry password or token
+#   SELFHOSTED_REGISTRY    registry URL (e.g. registry.example.com)
+#   PUSH_SELFHOSTED        "true" to enable
+#
+# -------------------------------------------------------------------------
+# FOR FORKS / NEW USERS
+# -------------------------------------------------------------------------
+# 1. Click "New pipeline": the Test & Audit workflow is the default
+#    and needs no secrets.
+# 2. Deploy docs: pick "Deploy Docs" in the WORKFLOW dropdown.
+# 3. GitLab CR works immediately on any GitLab project.
+# 4. Release: add DOCKERHUB_USERNAME and DOCKERHUB_TOKEN as CI/CD
+#    variables, then pick "Build & Publish" and set RELEASE_VERSION.
+#
+# =========================================================================
+
+# ---------------------------------------------------------------------------
+# Workflow rules
+# ---------------------------------------------------------------------------
+# A pipeline is created only when:
+#   - someone clicks CI/CD > Pipelines > "Run pipeline" (source "web")
+#     or starts one via the Pipelines API (source "api"), or
+#   - a merge request is opened or updated (source
+#     "merge_request_event"). Which MRs actually get jobs is decided
+#     per job by `rules:changes` (dependency files only), mirroring
+#     GitHub ci.yml's `pull_request: paths:` trigger.
+# Pushes, tags and schedules never create a pipeline, so repo
+# creation, forks and ordinary commits burn no CI minutes. This
+# mirrors the GitHub side, where ci.yml, release.yml and docs.yml
+# are workflow_dispatch (manual) runs, and ci.yml additionally
+# auto-runs on dependency-file PRs.
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_PIPELINE_SOURCE == "api"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - when: never
+
+stages:
+  - test
+  - build
+  - release
+  - pages
+
+variables:
+  DOCKER_BUILDKIT: "1"
+  COMPOSE_DOCKER_CLI_BUILD: "1"
+  HOST_UID: "1000"
+  HOST_GID: "1000"
+  # GitLab CR namespaces (auto-adapt to forks via CI_REGISTRY_IMAGE).
+  FULL_IMAGE_GL: "${CI_REGISTRY_IMAGE}/partylinepager-full"
+  COMPOSE_IMAGE_GL: "${CI_REGISTRY_IMAGE}"
+  # Registry toggles. Override per-pipeline or as CI/CD variables.
+  PUSH_DOCKERHUB: "false"
+  PUSH_GITLAB: "true"
+  # ---------------------------------------------------------------------
+  # Run-pipeline form fields (shown on the "New pipeline" page).
+  # The WORKFLOW dropdown picks which GitHub-style workflow to run.
+  # ---------------------------------------------------------------------
+  WORKFLOW:
+    value: test
+    description: |
+      Which workflow to run.
+      - Test & Audit (test): unit tests, supply-chain audit, image builds
+      - Build & Publish (release): tests + builds, then play push-registries
+      - Deploy Docs (docs): build and publish the documentation site
+    options:
+      - test
+      - release
+      - docs
+  RELEASE_VERSION:
+    value: ""
+    description: |
+      Version to publish for the Build & Publish workflow,
+      e.g. 1.0.0 (no "v" prefix). Ignored for other workflows.
+  DOCS_CNAME:
+    value: ""
+    description: |
+      Custom domain for Deploy Docs, e.g. docs.example.com.
+      Leave blank to use the automatic GitLab Pages URL.
+
+# ---------------------------------------------------------------------------
+# Test stage
+# ---------------------------------------------------------------------------
+
+unit-tests:
+  stage: test
+  image: docker:29.8.0
+  services:
+    - docker:29.8.0-dind
+  script:
+    # GitLab CI runs as root; build-tools runs as UID 1000.
+    # Pre-create writable dirs so the container can write cargo
+    # artifacts without being root.
+    - mkdir -p .cache/cargo target
+    - chmod 777 .cache .cache/cargo target
+    - docker compose
+        -f compose/docker-compose.build-tools.yml
+        build build-tools
+    - docker compose
+        -f compose/docker-compose.build-tools.yml
+        run --rm -T build-tools
+        cargo test --workspace
+  timeout: 40 minutes
+  # Runs on dependency-file MRs (Renovate) and on manual runs
+  # unless they are docs-only. Mirrors ci.yml's unit-tests job.
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - Cargo.lock
+        - Cargo.toml
+        - deny.toml
+        - cooldown.toml
+    - if: '$CI_PIPELINE_SOURCE == "web" && $WORKFLOW != "docs"'
+    - if: '$CI_PIPELINE_SOURCE == "api" && $WORKFLOW != "docs"'
+    - when: never
+
+supply-chain-audit:
+  stage: test
+  image: docker:29.8.0
+  services:
+    - docker:29.8.0-dind
+  script:
+    - mkdir -p .cache/cargo target
+    - chmod 777 .cache .cache/cargo target
+    - docker compose
+        -f compose/docker-compose.build-tools.yml
+        build build-tools
+    - ./hooks/audit-cargo-deps.sh
+  timeout: 30 minutes
+  # Runs on dependency-file MRs and on manual runs unless they are
+  # docs-only. Mirrors ci.yml's supply-chain-audit job.
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - Cargo.lock
+        - Cargo.toml
+        - deny.toml
+        - cooldown.toml
+    - if: '$CI_PIPELINE_SOURCE == "web" && $WORKFLOW != "docs"'
+    - if: '$CI_PIPELINE_SOURCE == "api" && $WORKFLOW != "docs"'
+    - when: never
+
+# ---------------------------------------------------------------------------
+# Build stage: verify both images compile (no push)
+# ---------------------------------------------------------------------------
+
+build-compose-image:
+  stage: build
+  image: docker:29.8.0
+  services:
+    - docker:29.8.0-dind
+  script:
+    - docker compose build
+  timeout: 30 minutes
+  needs: [unit-tests, supply-chain-audit]
+  # Same inclusion rules as the test jobs: GitHub ci.yml runs its
+  # build jobs on every dispatch/PR, so these are automatic too.
+  # Excluded entirely from docs-only runs.
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - Cargo.lock
+        - Cargo.toml
+        - deny.toml
+        - cooldown.toml
+    - if: '$CI_PIPELINE_SOURCE == "web" && $WORKFLOW != "docs"'
+    - if: '$CI_PIPELINE_SOURCE == "api" && $WORKFLOW != "docs"'
+    - when: never
+
+build-full-image:
+  stage: build
+  image: docker:29.8.0
+  services:
+    - docker:29.8.0-dind
+  script:
+    - docker build -f deploy/Dockerfile.full -t partylinepager-full .
+  timeout: 45 minutes
+  needs: [unit-tests, supply-chain-audit]
+  # Same inclusion rules as the test jobs (see build-compose-image).
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - Cargo.lock
+        - Cargo.toml
+        - deny.toml
+        - cooldown.toml
+    - if: '$CI_PIPELINE_SOURCE == "web" && $WORKFLOW != "docs"'
+    - if: '$CI_PIPELINE_SOURCE == "api" && $WORKFLOW != "docs"'
+    - when: never
+
+# ---------------------------------------------------------------------------
+# Release stage: build and push to registries
+#
+# Trigger: run the pipeline with the "Build & Publish" workflow and
+# RELEASE_VERSION (e.g. 1.0.0, no "v"), then click the play button
+# on "push-registries". Set PUSH_DOCKERHUB or PUSH_GITLAB to
+# "false" to skip a registry. Images are rebuilt here because
+# GitLab CI jobs do not share a Docker daemon across stages.
+# ---------------------------------------------------------------------------
+
+push-registries:
+  stage: release
+  image: docker:29.8.0
+  services:
+    - docker:29.8.0-dind
+  timeout: 60 minutes
+  needs: [build-compose-image, build-full-image]
+  # Exists only for the "Build & Publish" workflow. The play button
+  # is the release trigger itself; nothing pushes by itself.
+  rules:
+    - if: '$WORKFLOW == "release"'
+      when: manual
+    - when: never
+  before_script:
+    - |
+      if [ "$PUSH_GITLAB" = "true" ]; then
+        echo "$CI_REGISTRY_PASSWORD" |
+          docker login -u "$CI_REGISTRY_USER" \
+            --password-stdin "$CI_REGISTRY"
+      fi
+    - |
+      if [ "$PUSH_DOCKERHUB" = "true" ]; then
+        if [ -z "${DOCKERHUB_USERNAME:-}" ] || [ -z "${DOCKERHUB_TOKEN:-}" ]; then
+          echo "WARNING: PUSH_DOCKERHUB is true but DOCKERHUB_USERNAME"
+          echo "         or DOCKERHUB_TOKEN is not set. Skipping Docker Hub."
+          echo "         Add them under Settings > CI/CD > Variables."
+        else
+          echo "$DOCKERHUB_TOKEN" |
+            docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+        fi
+      fi
+    # -- Self-hosted registry (uncomment when ready) -----------------------
+    # - |
+    #   if [ "$PUSH_SELFHOSTED" = "true" ]; then
+    #     if [ -z "${SELFHOSTED_REGISTRY:-}" ] || [ -z "${SELFHOSTED_TOKEN:-}" ]; then
+    #       echo "WARNING: PUSH_SELFHOSTED is true but credentials not set."
+    #     else
+    #       echo "$SELFHOSTED_TOKEN" |
+    #         docker login -u "$SELFHOSTED_USERNAME" \
+    #           --password-stdin "$SELFHOSTED_REGISTRY"
+    #     fi
+    #   fi
+  script:
+    - |
+      if [ -z "${RELEASE_VERSION:-}" ]; then
+        echo "ERROR: Set RELEASE_VERSION when running this pipeline"
+        echo "       (e.g. 1.0.0, no v prefix)"
+        exit 1
+      fi
+
+    # Docker Hub namespace: use DOCKERHUB_USERNAME if set,
+    # otherwise fall back to the GitLab project namespace.
+    - DH_NS="${DOCKERHUB_USERNAME:-$CI_PROJECT_NAMESPACE}"
+    - FULL_IMAGE_DH="${DH_NS}/partylinepager-full"
+    - COMPOSE_IMAGE_DH="${DH_NS}/partylinepager"
+
+    # -- Full image --------------------------------------------------------
+    - docker build -f deploy/Dockerfile.full
+        -t "${FULL_IMAGE_GL}:latest"
+        -t "${FULL_IMAGE_GL}:${RELEASE_VERSION}"
+        -t "${FULL_IMAGE_DH}:latest"
+        -t "${FULL_IMAGE_DH}:${RELEASE_VERSION}" .
+    - |
+      if [ "$PUSH_GITLAB" = "true" ]; then
+        docker push "${FULL_IMAGE_GL}:latest"
+        docker push "${FULL_IMAGE_GL}:${RELEASE_VERSION}"
+      fi
+    - |
+      if [ "$PUSH_DOCKERHUB" = "true" ] \
+         && [ -n "${DOCKERHUB_USERNAME:-}" ] \
+         && [ -n "${DOCKERHUB_TOKEN:-}" ]; then
+        docker push "${FULL_IMAGE_DH}:latest"
+        docker push "${FULL_IMAGE_DH}:${RELEASE_VERSION}"
+      fi
+
+    # -- Compose image -----------------------------------------------------
+    - docker build
+        -t "${COMPOSE_IMAGE_GL}:latest"
+        -t "${COMPOSE_IMAGE_GL}:${RELEASE_VERSION}"
+        -t "${COMPOSE_IMAGE_DH}:latest"
+        -t "${COMPOSE_IMAGE_DH}:${RELEASE_VERSION}" .
+    - |
+      if [ "$PUSH_GITLAB" = "true" ]; then
+        docker push "${COMPOSE_IMAGE_GL}:latest"
+        docker push "${COMPOSE_IMAGE_GL}:${RELEASE_VERSION}"
+      fi
+    - |
+      if [ "$PUSH_DOCKERHUB" = "true" ] \
+         && [ -n "${DOCKERHUB_USERNAME:-}" ] \
+         && [ -n "${DOCKERHUB_TOKEN:-}" ]; then
+        docker push "${COMPOSE_IMAGE_DH}:latest"
+        docker push "${COMPOSE_IMAGE_DH}:${RELEASE_VERSION}"
+      fi
+
+    # -- Self-hosted registry (uncomment when ready) -----------------------
+    # - |
+    #   if [ "$PUSH_SELFHOSTED" = "true" ] \
+    #      && [ -n "${SELFHOSTED_REGISTRY:-}" ]; then
+    #     docker tag "${FULL_IMAGE_GL}:latest" \
+    #       "${SELFHOSTED_REGISTRY}/partylinepager-full:latest"
+    #     docker tag "${FULL_IMAGE_GL}:${RELEASE_VERSION}" \
+    #       "${SELFHOSTED_REGISTRY}/partylinepager-full:${RELEASE_VERSION}"
+    #     docker push "${SELFHOSTED_REGISTRY}/partylinepager-full:latest"
+    #     docker push "${SELFHOSTED_REGISTRY}/partylinepager-full:${RELEASE_VERSION}"
+    #     docker tag "${COMPOSE_IMAGE_GL}:latest" \
+    #       "${SELFHOSTED_REGISTRY}/partylinepager:latest"
+    #     docker tag "${COMPOSE_IMAGE_GL}:${RELEASE_VERSION}" \
+    #       "${SELFHOSTED_REGISTRY}/partylinepager:${RELEASE_VERSION}"
+    #     docker push "${SELFHOSTED_REGISTRY}/partylinepager:latest"
+    #     docker push "${SELFHOSTED_REGISTRY}/partylinepager:${RELEASE_VERSION}"
+    #   fi
+
+# ---------------------------------------------------------------------------
+# Pages stage: build and deploy MkDocs Material documentation
+#
+# Trigger: run the pipeline with the "Deploy Docs" workflow (choose
+# it in the WORKFLOW dropdown). The pages job then runs
+# automatically and GitLab deploys the public/ artifact to
+# Pages (the job name "pages" is a GitLab keyword that triggers
+# Pages deployment). No secrets needed.
+#
+# ---- Custom domain (three ways, pick one) ----
+#
+# By default the site URL is auto-detected from $CI_PAGES_URL
+# (e.g. https://<namespace>.gitlab.io/<project>). No setup needed.
+#
+# METHOD 1: Fill in the field at run time (one-off, nothing stored)
+#   On the "New pipeline" page, the DOCS_CNAME field is prefilled
+#   and editable. Put your domain in it (e.g. docs.example.com)
+#   and run with the "Deploy Docs" workflow. Mirrors the "Custom
+#   domain" input field in GitHub's docs.yml workflow_dispatch form.
+#
+# METHOD 2: Project CI/CD variable (persistent, not in git)
+#   Go to Settings > CI/CD > Variables and create DOCS_CNAME
+#   with your domain as the value (e.g. docs.example.com).
+#   The job reads it automatically on every run. Mirrors a GitHub
+#   repository variable.
+#
+# METHOD 3: Edit this file (persistent, stored in git)
+#   Set DOCS_CNAME in the global variables: block at the top.
+#   Forks will inherit this value, so only use this method if
+#   everyone sharing the repo uses the same domain.
+#
+# Precedence: run-time field (method 1) > project CI/CD variable
+# (method 2) > value in this file (method 3). This mirrors
+# GitHub's input > repository variable > env in file.
+#
+# DNS setup (required for custom domains):
+#   1. Go to Settings > Pages > New Domain
+#   2. Enter your domain and add the TXT record for verification
+#   3. Add a DNS CNAME record: docs.example.com -> <namespace>.gitlab.io
+# ---------------------------------------------------------------------------
+
+pages:
+  stage: pages
+  image:
+    name: squidfunk/mkdocs-material:9.7.7
+    entrypoint: [""]
+  timeout: 10 minutes
+  resource_group: pages
+  script:
+    - rm -rf /docs
+    - ln -s "$CI_PROJECT_DIR/docs" /docs
+    - mkdir -p /site
+    # Resolve site URL: custom domain if set, otherwise auto-detect.
+    - |
+      if [ -n "$DOCS_CNAME" ]; then
+        SITE_URL="https://${DOCS_CNAME}/"
+        echo "Site URL (custom domain): ${SITE_URL}"
+      else
+        SITE_URL="${CI_PAGES_URL}/"
+        echo "Site URL (auto-detected): ${SITE_URL}"
+      fi
+      sed -i "s|^site_url:.*|site_url: ${SITE_URL}|" \
+        "$CI_PROJECT_DIR/docs/website/mkdocs.yml"
+    - mkdocs build -f "$CI_PROJECT_DIR/docs/website/mkdocs.yml" --strict --clean
+    - mv /site public
+    - echo ""
+    - echo "============================================"
+    - 'echo "  Live at: ${SITE_URL}"'
+    - echo "============================================"
+  environment:
+    name: pages
+    url: $CI_PAGES_URL
+  artifacts:
+    paths:
+      - public
+  # The whole point of the "Deploy Docs" workflow: this is the only
+  # job that exists on such runs. Mirrors docs.yml being a separate
+  # manually-triggered workflow.
+  rules:
+    - if: '$WORKFLOW == "docs"'
+    - when: never

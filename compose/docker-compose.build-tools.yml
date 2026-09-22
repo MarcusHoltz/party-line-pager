@@ -1,0 +1,31 @@
+# Build-stage container for running cargo commands: tests, audits, updates.
+#
+#   docker compose -f compose/docker-compose.build-tools.yml \
+#     run --rm build-tools cargo test --workspace
+#   docker compose -f compose/docker-compose.build-tools.yml \
+#     run --rm build-tools cargo test -p partylinepager-core
+#
+# Builds from the same Dockerfile's build stage and keeps the cargo registry
+# in ./.cache and the build output in ./target, so repeat runs are fast and
+# nothing root-owned lands in the checkout.
+#
+# Also used by hooks/audit-cargo-deps.sh and hooks/update-cargo-deps.sh
+# (partylinepager.sh Maintenance menu items 5 and 6).
+
+services:
+  build-tools:
+    build:
+      context: ..
+      target: build
+    working_dir: /src
+    # Same knob as the daemon, and it matters more here: without it every file
+    # cargo writes into ./target and ./.cache belongs to root and you need sudo
+    # to delete your own build directory.
+    user: "${HOST_UID:-0}:${HOST_GID:-0}"
+    environment:
+      # cargo writes here; the image's default CARGO_HOME is root-owned, so
+      # point it at the bind mount below to work as any uid.
+      CARGO_HOME: "/src/.cache/cargo"
+    volumes:
+      - ..:/src
+    command: ["cargo", "test", "--workspace"]

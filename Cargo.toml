@@ -1,0 +1,35 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/partylinepager-core",
+    "crates/partylinepagerd",
+    "crates/partylinepagerctl",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+# std::fs::File::lock (stabilized 1.89) is used instead of a locking crate.
+rust-version = "1.89"
+license = "MIT"
+repository = "https://github.com/MarcusHoltz/PartylinePager"
+
+[workspace.dependencies]
+partylinepager-core = { path = "crates/partylinepager-core" }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.9"
+humantime-serde = "1"
+chrono = { version = "0.4", default-features = false, features = ["std", "clock", "serde"] }
+chrono-tz = "0.10"
+# "std" makes getrandom::Error implement std::error::Error, which thiserror needs.
+getrandom = { version = "0.3", features = ["std"] }
+data-encoding = "2"
+thiserror = "2"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "process", "signal", "fs"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+clap = { version = "4", features = ["derive"] }

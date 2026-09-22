@@ -1,0 +1,38 @@
+# PLP-owned reticulum-party-line reflector compose file.
+#
+# Why this exists instead of using party-lines/reticulum-party-line/:
+#   - The upstream compose uses build: . (requires a git checkout)
+#   - The upstream compose mounts PulseAudio sockets (fails on servers)
+#   - The upstream image: tag is local-only (can't pull from a registry)
+#
+# This file solves all three: registry image, no audio, no build context.
+# Runtime state (data/, secrets/) lands in this directory (gitignored).
+#
+# The reflector service is behind profiles: [reflector], matching
+# what provider-rns.sh exports as PLP_COMPOSE_ARGS="--profile reflector".
+#
+# To use a local build from a git checkout instead, set
+# RETICULUM_PARTYLINE_DIR in .env (see .env.example).
+
+services:
+  reflector:
+    image: marcusholtz/reticulum-party-line:latest
+    container_name: reticulum-party-line
+    profiles: ["reflector"]
+    hostname: reflector
+    restart: unless-stopped
+    stdin_open: false
+    tty: false
+    shm_size: "512m"
+    tmpfs:
+      - /dev/shm:size=512m,mode=1777
+    volumes:
+      - ./data:/app/data
+      - ./secrets:/run/secrets:ro
+    environment:
+      DATA_DIR: /app/data
+      RUNTIME_DIR: /dev/shm/partyline
+      REFLECTOR_PORT: "4242"
+      SHARED_SECRET_FILE: /run/secrets/shared_secret.txt
+      TERM: "xterm"
+    command: ["bash", "/app/src/partyline.sh", "relay"]

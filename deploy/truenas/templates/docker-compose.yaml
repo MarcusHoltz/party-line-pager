@@ -1,0 +1,21 @@
+{% set tpl = ix_lib.base.render.Render(values) %}
+
+{% set c1 = tpl.add_container(values.consts.partylinepager_container_name, "image") %}
+
+{% do c1.environment.add_env("PLP_PROVIDERS", values.partylinepager.providers) %}
+{% do c1.environment.add_env("PLP_AUTO_START", "1" if values.partylinepager.auto_start else "0") %}
+{% do c1.environment.add_env("PLP_HEADLESS", "1" if values.partylinepager.headless else "0") %}
+{% do c1.environment.add_env("PLP_WEB_BASE_URL", values.partylinepager.web_base_url) %}
+
+{% if values.partylinepager.ttyd_credential %}
+  {% do c1.environment.add_env("TTYD_CREDENTIAL", values.partylinepager.ttyd_credential) %}
+{% endif %}
+
+{% do c1.environment.add_user_envs(values.partylinepager.additional_envs) %}
+{% do c1.add_port(values.network.web_port) %}
+
+{% do c1.add_storage(values.consts.base_config_path, values.storage.config) %}
+
+{% do tpl.portals.add(values.network.web_port, {"scheme": "http"}) %}
+
+{{ tpl.render() | tojson }}

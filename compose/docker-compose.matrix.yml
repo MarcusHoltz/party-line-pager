@@ -1,0 +1,26 @@
+# Matrix. No sidecar: matrix-sdk talks to the homeserver directly.
+#
+#   docker compose -f docker-compose.yml -f compose/docker-compose.matrix.yml up -d
+#
+# Needs `[matrix]` in adapters.toml and MATRIX_PASSWORD in .env.
+#
+# The volume below is the E2EE store, `store_path` in adapters.toml. It holds
+# the device identity and the encryption keys, so it has to outlive the
+# container the way ./config/state does: recreating the container without it means a
+# fresh login, a new device, and old encrypted history the bot can no longer
+# read. Change both sides together if you change store_path.
+#
+# Create it before the first `up`:
+#
+#   mkdir -p config/matrix-store
+#
+# Docker creates a missing bind-mount source as root, and this
+# container runs as you. `./partylinepager.sh` does the mkdir for
+# you when [matrix] is switched on.
+
+services:
+  partylinepagerd:
+    environment:
+      MATRIX_PASSWORD: "${MATRIX_PASSWORD:-}"
+    volumes:
+      - ../config/matrix-store:/var/lib/partylinepager/matrix

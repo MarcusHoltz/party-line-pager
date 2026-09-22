@@ -1,0 +1,28 @@
+# Docker access for the party line providers. Loaded once when policy.toml has
+# any of [provider.tor], [provider.i2p] or [provider.rns].
+#
+#   docker compose -f docker-compose.yml -f compose/docker-compose.docker-socket.yml \
+#                  -f compose/docker-compose.i2p.yml up -d
+#
+# This is the privileged half of the partyline pager, and the only reason the
+# daemon ever needs the Docker socket. The socket is equivalent to root on the
+# host: read the security section of the README before deciding you are fine
+# with it.
+#
+# A [provider.web]-only instance simply does not load this file, and then the
+# daemon has no socket and no docker group. That is a meaningfully smaller
+# attack surface and it costs nothing to take.
+#
+# Separate from the per-party-line overlays because compose CONCATENATES
+# group_add and then refuses a list with two equal entries, so an instance
+# offering two party lines could not have both overlays grant the group. The
+# grant happens once here; each party line overlay adds only its own checkout.
+
+services:
+  partylinepagerd:
+    # The party line hooks drive `docker compose`, which needs the docker group
+    # rather than root. See .env.example for DOCKER_GID.
+    group_add:
+      - "${DOCKER_GID:-0}"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock

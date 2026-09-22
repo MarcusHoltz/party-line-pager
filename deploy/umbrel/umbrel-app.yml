@@ -1,0 +1,36 @@
+manifestVersion: 1
+id: partylinepager
+category: networking
+name: PartylinePager
+version: "1.0.0"
+tagline: Multi-protocol room pager with Tor, I2P, and Reticulum
+description: >-
+  PartylinePager opens a room on one chat network, and everyone who
+  subscribed on any chat network gets a way into it. Supports Tor,
+  I2P, and Reticulum party lines with Telegram, Discord, Matrix,
+  IRC, XMPP, Mastodon, Mattermost, Signal, and Email adapters.
+
+
+  No database, no accounts, nothing remembered. State is JSON files
+  on disk. Configure via the browser-based terminal or environment
+  variables.
+
+
+  The web terminal at port 7681 provides a setup wizard and
+  management interface. Set TTYD_CREDENTIAL to protect it with
+  basic auth.
+releaseNotes: >-
+  Initial release with support for nine chat network adapters and
+  three anonymous transport protocols (Tor, I2P, Reticulum).
+developer: MarcusHoltz
+website: https://github.com/MarcusHoltz/PartylinePager
+dependencies: []
+repo: https://github.com/MarcusHoltz/PartylinePager
+support: https://github.com/MarcusHoltz/PartylinePager/discussions
+port: 7681
+gallery: []
+path: ""
+defaultUsername: ""
+defaultPassword: ""
+submitter: MarcusHoltz
+submission: https://github.com/getumbrel/umbrel-apps/pull/XXXXX

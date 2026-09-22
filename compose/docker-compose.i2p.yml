@@ -1,0 +1,31 @@
+# The I2P party line provider. Load this only if policy.toml has a
+# [provider.i2p] section.
+#
+# Needs the Docker socket, which is granted once in
+# compose/docker-compose.docker-socket.yml. Load that alongside this file:
+#
+#   docker compose -f docker-compose.yml -f compose/docker-compose.docker-socket.yml \
+#                  -f compose/docker-compose.i2p.yml up -d
+#
+# Separate files because compose concatenates group_add and then rejects a list
+# with two equal entries, so two party lines could not each grant the group.
+#
+# Defaults to transports/i2p-party-line/ (published image, no checkout needed).
+# To use a local git checkout instead, set I2P_PARTYLINE_DIR in .env:
+#   I2P_PARTYLINE_DIR=${PWD}/party-lines/i2p-party-line
+# and clone the repo:
+#   git clone https://gitlab.com/MarcusHoltz/i2p-party-line.git party-lines/i2p-party-line
+
+services:
+  partylinepagerd:
+    environment:
+      # Its own variable, not TOR_PARTYLINE_DIR. Every party-line overlay sets
+      # the directory for its own hook on this one service, so a shared name
+      # would have whichever overlay is loaded last silently win and point all
+      # of them at one directory.
+      I2P_PARTYLINE_DIR: "${I2P_PARTYLINE_DIR:-${PWD}/transports/i2p-party-line}"
+    volumes:
+      # The transport directory the hooks operate on. The path must be
+      # identical inside and outside the container, because compose resolves
+      # relative bind mounts against the host filesystem.
+      - "${I2P_PARTYLINE_DIR:-${PWD}/transports/i2p-party-line}:${I2P_PARTYLINE_DIR:-${PWD}/transports/i2p-party-line}"

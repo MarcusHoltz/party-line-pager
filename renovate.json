@@ -1,0 +1,49 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "labels": ["dependencies"],
+  "cargo": {
+    "enabled": true,
+    "rangeStrategy": "update-lockfile",
+    "minimumReleaseAge": "7 days",
+    "labels": ["dependencies", "rust"]
+  },
+  "packageRules": [
+    {
+      "description": "Cargo updates require manual review (cooldown gate)",
+      "matchManagers": ["cargo"],
+      "automerge": false,
+      "prPriority": -1
+    },
+    {
+      "description": "Keep Docker digest pins current",
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "matchUpdateTypes": ["digest"],
+      "automerge": false,
+      "labels": ["dependencies", "docker"]
+    },
+    {
+      "description": "Docker tag updates need review",
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "matchUpdateTypes": ["major", "minor", "patch"],
+      "automerge": false,
+      "labels": ["dependencies", "docker"]
+    },
+    {
+      "description": "GitHub Actions SHA pin updates",
+      "matchManagers": ["github-actions"],
+      "automerge": false,
+      "labels": ["dependencies", "ci"]
+    },
+    {
+      "description": "Ignore self-published transport images (not on Docker Hub yet)",
+      "matchManagers": ["docker-compose"],
+      "matchPackageNames": ["/^marcusholtz\\//"],
+      "enabled": false
+    }
+  ],
+  "ignorePaths": [
+    "party-lines/**",
+    "to-do/**"
+  ]
+}

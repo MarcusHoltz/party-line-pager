@@ -1,0 +1,39 @@
+annotations:
+  min_scale_version: 24.10.2.2
+app_version: 1.0.0
+capabilities: []
+categories:
+- networking
+date_added: '2026-09-12'
+description: >-
+  PartylinePager opens a room on one chat network, and everyone who
+  subscribed on any chat network gets a way into it. Supports Tor,
+  I2P, and Reticulum party lines with Telegram, Discord, Matrix,
+  IRC, XMPP, Mastodon, Mattermost, Signal, and Email adapters.
+home: https://github.com/MarcusHoltz/PartylinePager
+host_mounts: []
+icon: https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/posts/party-line-pager--tor-i2p-rns-call-pager.png
+keywords:
+- privacy
+- communication
+- tor
+- i2p
+- reticulum
+- pager
+maintainers:
+- name: MarcusHoltz
+  url: https://github.com/MarcusHoltz
+name: partylinepager
+run_as_context:
+- description: Container runs as root (required for transport daemons).
+  gid: 0
+  group_name: root
+  uid: 0
+  user_name: root
+screenshots: []
+sources:
+- https://github.com/MarcusHoltz/PartylinePager
+- https://hub.docker.com/r/marcusholtz/partylinepager-full
+title: PartylinePager
+train: community
+version: 1.0.0

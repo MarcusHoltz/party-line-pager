@@ -1,0 +1,13 @@
+# Email. No sidecar: the daemon speaks IMAP and SMTP to your provider.
+#
+#   docker compose -f docker-compose.yml -f compose/docker-compose.email.yml up -d
+#
+# Needs `[email]` in adapters.toml, plus IMAP_PASSWORD and SMTP_PASSWORD in
+# .env. They are separate variables because the two are separate accounts on
+# some providers; set both to the same value when they are not.
+
+services:
+  partylinepagerd:
+    environment:
+      IMAP_PASSWORD: "${IMAP_PASSWORD:-}"
+      SMTP_PASSWORD: "${SMTP_PASSWORD:-}"

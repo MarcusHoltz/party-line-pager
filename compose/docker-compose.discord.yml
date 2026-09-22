@@ -1,0 +1,13 @@
+# Discord. No sidecar: the daemon holds a gateway websocket open, same shape
+# as Mattermost's connection to a server the admin already runs.
+#
+#   docker compose -f docker-compose.yml -f compose/docker-compose.discord.yml up -d
+#
+# Needs `[discord]` in adapters.toml and DISCORD_TOKEN in .env: a bot token
+# from the Discord Developer Portal. See the README's "Setting up Discord"
+# section for the lobby-server enrollment flow this adapter assumes.
+
+services:
+  partylinepagerd:
+    environment:
+      DISCORD_TOKEN: "${DISCORD_TOKEN:-}"

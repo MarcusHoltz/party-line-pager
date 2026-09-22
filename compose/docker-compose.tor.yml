@@ -1,0 +1,30 @@
+# The Tor party line provider. Load this only if policy.toml has a
+# [provider.tor] section.
+#
+# Needs the Docker socket, which is granted once in
+# compose/docker-compose.docker-socket.yml. Load that alongside this file:
+#
+#   docker compose -f docker-compose.yml -f compose/docker-compose.docker-socket.yml \
+#                  -f compose/docker-compose.tor.yml up -d
+#
+# Separate files because compose concatenates group_add and then rejects a list
+# with two equal entries, so two party lines could not each grant the group.
+#
+# Defaults to transports/tor-party-line/ (published image, no checkout needed).
+# To use a local git checkout instead, set TOR_PARTYLINE_DIR in .env:
+#   TOR_PARTYLINE_DIR=${PWD}/party-lines/tor-party-line
+# and clone the repo:
+#   git clone https://gitlab.com/MarcusHoltz/tor-party-line.git party-lines/tor-party-line
+
+services:
+  partylinepagerd:
+    environment:
+      # Where the provider hooks find the tor-party-line directory, as seen
+      # from inside this container. Defaults to the PLP-owned transport
+      # compose file (published image). Override in .env for a checkout.
+      TOR_PARTYLINE_DIR: "${TOR_PARTYLINE_DIR:-${PWD}/transports/tor-party-line}"
+    volumes:
+      # The transport directory the hooks operate on. The path must be
+      # identical inside and outside the container, because compose resolves
+      # relative bind mounts against the host filesystem.
+      - "${TOR_PARTYLINE_DIR:-${PWD}/transports/tor-party-line}:${TOR_PARTYLINE_DIR:-${PWD}/transports/tor-party-line}"

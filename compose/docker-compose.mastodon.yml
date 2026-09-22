@@ -1,0 +1,10 @@
+# Mastodon. No sidecar: the daemon polls the instance's REST API.
+#
+#   docker compose -f docker-compose.yml -f compose/docker-compose.mastodon.yml up -d
+#
+# Needs `[mastodon]` in adapters.toml and MASTODON_TOKEN in .env.
+
+services:
+  partylinepagerd:
+    environment:
+      MASTODON_TOKEN: "${MASTODON_TOKEN:-}"

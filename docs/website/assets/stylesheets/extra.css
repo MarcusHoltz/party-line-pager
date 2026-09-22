@@ -1,0 +1,140 @@
+/* -------------------------------------------------------------------------
+ * PartylinePager brand overrides for the Material theme.
+ *
+ * Wired in via `extra_css` in docs/website/mkdocs.yml. `palette` there says
+ * primary/accent: custom, so Material pulls these tokens instead of a
+ * built-in palette name.
+ *
+ * Colors come from the pager artwork (assets/logo.svg):
+ *   body purple #2A2438, body shadow #0A0810, screen blue #3A2D9E,
+ *   "Pager" green #81CA73, screen glow cyan #6FE3FF.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  --md-primary-fg-color:        #2A2438;
+  --md-primary-fg-color--light: #4A4458;
+  --md-primary-fg-color--dark:  #0A0810;
+  --md-accent-fg-color:         #4C7A3B;
+  --md-accent-fg-color--light:  #6B9A4F;
+  --md-accent-fg-color--dark:   #3A5C2D;
+  --md-typeset-a-color:         #7851D4;
+}
+
+/* Link colors: the bright pink, both light and dark modes. The token is
+ * set above AND the element rules force the color so no cascade variance
+ * can darken it. Hover/focus and the active sidebar entry share the pink. */
+.md-typeset a {
+  color: #7851D4;
+  text-shadow: none;
+  transition: all 250ms ease-out;
+}
+
+.md-typeset a:hover,
+.md-typeset a:focus {
+  color: #9184d0;
+  text-shadow: 1px 1px 0px rgba(4,7,12,.2);
+}
+
+.md-nav__item .md-nav__link--active,
+.md-nav__item .md-nav__link--active code {
+  color: #7851D4;
+}
+
+/* Buttons: the pager-style buttons. Filled `--primary` holds its dark
+ * purple fill (#2A1B46) with a lighter purple border (#565084) across every
+ * state, so nothing flashes green on hover. The outline `.md-button` pairs
+ * a dark green border (#2F4D29) with light lavender text; hover fills the
+ * outline with its green border. Light mode swaps the outline text to the
+ * dark green, because #D3C6E6 is unreadable against the lavender page. */
+.md-typeset .md-button {
+  color: #d3c6e6;
+  border-color: #2f4d29;
+}
+
+[data-md-color-scheme="default"] .md-typeset .md-button {
+  color: #4C7A3B;
+}
+
+.md-typeset .md-button--primary,
+.md-typeset .md-button--primary:focus,
+.md-typeset .md-button--primary:hover {
+  background-color: #2a1b46;
+  border-color: #565084;
+  color: var(--md-primary-bg-color);
+}
+
+.md-typeset .md-button:focus,
+.md-typeset .md-button:hover {
+  background-color: #2f4d29;
+  border-color: #2f4d29;
+  color: #d3c6e6;
+}
+
+/* Header bar: mirror the pager body gradient, dark purple to near-black. */
+.md-header {
+  background: linear-gradient(135deg,
+      #4A4458 0%,
+      #2A2438 38%,
+      #15111F 72%,
+      #0A0810 100%);
+}
+
+/* Active nav tab underline in the screen-glow cyan. */
+.md-tabs__link--active {
+  border-bottom-color: #6FE3FF;
+}
+
+/* Light mode: soft lavender wash behind content instead of flat white. */
+[data-md-color-scheme="default"] .md-main {
+  background-color: #F6F4FA;
+}
+
+/* Dark mode: the logo's "Pager" green reads better than the light-mode
+ * accent on slate. Cyan stays reserved for non-text highlights. */
+[data-md-color-scheme="slate"] {
+  --md-accent-fg-color:        #81CA73;
+  --md-accent-fg-color--light: #A9E39B;
+  --md-accent-fg-color--dark:  #5DA34F;
+}
+
+/* Cyan highlights (screen-glow color), non-text elements only. */
+::selection {
+  background-color: rgba(111, 227, 255, 0.28);
+}
+
+/* -------------------------------------------------------------------------
+ * Homepage hero (docs/index.md): logo, gradient title, tagline, CTAs.
+ * ------------------------------------------------------------------------- */
+
+.plp-hero {
+  text-align: center;
+  padding: 1.5rem 0 2.25rem;
+}
+
+.plp-hero img.plp-hero-logo {
+  width: 220px;
+  max-width: 60%;
+  height: auto;
+  display: block;
+  margin: 0 auto 1.25rem;
+}
+
+.plp-hero h1 {
+  font-size: 2.6rem;
+  margin: 0 0 0.75rem;
+  background: linear-gradient(90deg, #2A2438 0%, #3A2D9E 70%, #4A38A6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+[data-md-color-scheme="slate"] .plp-hero h1 {
+  background: linear-gradient(90deg, #AC9EF8 0%, #6FE3FF 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.plp-hero .md-button {
+  margin: 0.4rem;
+}

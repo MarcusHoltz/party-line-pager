@@ -1,0 +1,182 @@
+name: partylinepager
+services:
+  partylinepager:
+    image: marcusholtz/partylinepager-full:latest
+    container_name: partylinepager
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          memory: 256M
+    network_mode: bridge
+    ports:
+      - target: 7681
+        published: "7681"
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: /DATA/AppData/$AppID/config
+        target: /config
+    environment:
+      PLP_PROVIDERS: "tor,web"
+      PLP_AUTO_START: "0"
+      PLP_HEADLESS: "0"
+      PLP_WEB_BASE_URL: "https://p2p.mirotalk.com"
+      TTYD_CREDENTIAL: ""
+      TELEGRAM_TOKEN: ""
+      DISCORD_TOKEN: ""
+      MATRIX_HOMESERVER: ""
+      MATRIX_USER: ""
+      MATRIX_PASSWORD: ""
+      MATRIX_STORE_PATH: "/var/lib/partylinepager/matrix"
+      IRC_SERVER: ""
+      IRC_PORT: "6697"
+      IRC_NICK: "partylinepager"
+      IRC_TLS: "true"
+      IRC_CHANNEL: ""
+      IRC_ACCOUNT: ""
+      IRC_PASSWORD: ""
+      XMPP_JID: ""
+      XMPP_PASSWORD: ""
+      MASTODON_INSTANCE: ""
+      MASTODON_TOKEN: ""
+      MATTERMOST_URL: ""
+      MATTERMOST_TOKEN: ""
+      SIGNAL_NUMBER: ""
+      EMAIL_SMTP_HOST: ""
+      EMAIL_SMTP_PORT: "587"
+      EMAIL_SMTP_USER: ""
+      EMAIL_SMTP_PASSWORD: ""
+      EMAIL_IMAP_HOST: ""
+      EMAIL_FROM: ""
+    x-casaos:
+      envs:
+        - container: PLP_PROVIDERS
+          description:
+            en_US: "Comma-separated transports to enable: tor, i2p, rns, web"
+        - container: PLP_AUTO_START
+          description:
+            en_US: "Set to 1 to start daemon on boot (requires valid config)"
+        - container: PLP_HEADLESS
+          description:
+            en_US: "Set to 1 for daemon-only mode, no web terminal"
+        - container: PLP_WEB_BASE_URL
+          description:
+            en_US: "Video call instance URL for web rooms"
+        - container: TTYD_CREDENTIAL
+          description:
+            en_US: "Basic auth for web terminal (user:password)"
+        - container: TELEGRAM_TOKEN
+          description:
+            en_US: "Telegram bot token from @BotFather"
+        - container: DISCORD_TOKEN
+          description:
+            en_US: "Discord bot token"
+        - container: MATRIX_HOMESERVER
+          description:
+            en_US: "Matrix homeserver URL"
+        - container: MATRIX_USER
+          description:
+            en_US: "Matrix bot username"
+        - container: MATRIX_PASSWORD
+          description:
+            en_US: "Matrix bot password"
+        - container: MATRIX_STORE_PATH
+          description:
+            en_US: "Path for Matrix E2EE key store"
+        - container: IRC_SERVER
+          description:
+            en_US: "IRC server hostname"
+        - container: IRC_PORT
+          description:
+            en_US: "IRC server port"
+        - container: IRC_NICK
+          description:
+            en_US: "IRC bot nickname"
+        - container: IRC_TLS
+          description:
+            en_US: "Use TLS for IRC"
+        - container: IRC_CHANNEL
+          description:
+            en_US: "IRC channel to join"
+        - container: IRC_ACCOUNT
+          description:
+            en_US: "NickServ account name (if different from nick)"
+        - container: IRC_PASSWORD
+          description:
+            en_US: "NickServ password"
+        - container: XMPP_JID
+          description:
+            en_US: "XMPP JID for the bot"
+        - container: XMPP_PASSWORD
+          description:
+            en_US: "XMPP password"
+        - container: MASTODON_INSTANCE
+          description:
+            en_US: "Mastodon instance URL"
+        - container: MASTODON_TOKEN
+          description:
+            en_US: "Mastodon application token"
+        - container: MATTERMOST_URL
+          description:
+            en_US: "Mattermost server URL"
+        - container: MATTERMOST_TOKEN
+          description:
+            en_US: "Mattermost access token"
+        - container: SIGNAL_NUMBER
+          description:
+            en_US: "Signal phone number (E.164 format)"
+        - container: EMAIL_SMTP_HOST
+          description:
+            en_US: "SMTP server hostname"
+        - container: EMAIL_SMTP_PORT
+          description:
+            en_US: "SMTP server port"
+        - container: EMAIL_SMTP_USER
+          description:
+            en_US: "SMTP username"
+        - container: EMAIL_SMTP_PASSWORD
+          description:
+            en_US: "SMTP password"
+        - container: EMAIL_IMAP_HOST
+          description:
+            en_US: "IMAP server hostname"
+        - container: EMAIL_FROM
+          description:
+            en_US: "From address for outgoing email"
+      ports:
+        - container: "7681"
+          description:
+            en_US: "Web Terminal Port"
+      volumes:
+        - container: /config
+          description:
+            en_US: "Config, state, and secrets directory"
+x-casaos:
+  id: com.github.marcusholtz.partylinepager
+  architectures:
+    - amd64
+  main: partylinepager
+  author: MarcusHoltz
+  category: Communication
+  description:
+    en_US: |
+      PartylinePager opens a room on one chat network, and everyone
+      who subscribed on any chat network gets a way into it. Supports
+      Tor, I2P, and Reticulum party lines with Telegram, Discord,
+      Matrix, IRC, XMPP, Mastodon, Mattermost, Signal, and Email
+      adapters. No database, no accounts. Configure via the browser
+      terminal or environment variables.
+  developer: MarcusHoltz
+  icon: https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/posts/party-line-pager--tor-i2p-rns-call-pager.png
+  tagline:
+    en_US: Multi-protocol room pager with Tor, I2P, and Reticulum
+  title:
+    en_US: PartylinePager
+  index: /
+  port_map: "7681"
+  version: "1.0.0"
+  update_at: "2026-09-12"
+  website: "https://github.com/MarcusHoltz/PartylinePager"
+  repo: "https://github.com/MarcusHoltz/PartylinePager"
+  support: "https://github.com/MarcusHoltz/PartylinePager/discussions"

@@ -1,0 +1,13 @@
+{
+  "type": 3,
+  "title": "PartylinePager",
+  "description": "Multi-protocol room pager with Tor, I2P, and Reticulum party lines across nine chat networks",
+  "note": "Open the web terminal at port 7681 to run the setup wizard. Set TTYD_CREDENTIAL for basic auth. Pass adapter tokens (TELEGRAM_TOKEN, DISCORD_TOKEN, etc.) as environment variables.",
+  "categories": ["Communication", "Privacy"],
+  "platform": "linux",
+  "logo": "https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/posts/party-line-pager--tor-i2p-rns-call-pager.png",
+  "repository": {
+    "url": "https://github.com/MarcusHoltz/PartylinePager",
+    "stackfile": "deploy/portainer/docker-compose.yml"
+  }
+}

@@ -1,0 +1,34 @@
+# Signal. The one network that needs a container of its own.
+#
+#   docker compose -f docker-compose.yml -f compose/docker-compose.signal.yml up -d
+#
+# Register or link the number against this container once before enabling the
+# [signal] adapter. `./partylinepager.sh` has a menu item that shows the linking QR:
+#
+#   docker compose -f docker-compose.yml -f compose/docker-compose.signal.yml \
+#     exec signal-cli-rest-api signal-cli --help
+#
+# MODE=json-rpc is required: the signal adapter receives over the websocket this
+# mode exposes at /v1/receive, not the plain GET normal/native mode would serve.
+# Changing MODE here needs a matching change in
+# crates/partylinepagerd/src/adapters/signal.rs.
+#
+# No secret goes into the daemon's environment: `[signal]` in adapters.toml is
+# a URL and a phone number, and the credentials live in ./config/signal-cli.
+
+services:
+  partylinepagerd:
+    depends_on:
+      - signal-cli-rest-api
+
+  signal-cli-rest-api:
+    image: bbernhard/signal-cli-rest-api:latest
+    restart: unless-stopped
+    environment:
+      MODE: "json-rpc"
+    volumes:
+      # The linked-device identity. Losing this means re-registering the
+      # number, so it moves with the project like everything else.
+      - ../config/signal-cli:/home/.local/share/signal-cli
+    expose:
+      - "8080"

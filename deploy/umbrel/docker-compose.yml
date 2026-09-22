@@ -1,0 +1,41 @@
+version: "3.7"
+services:
+  server:
+    image: marcusholtz/partylinepager-full:latest
+    restart: on-failure
+    ports:
+      - "${APP_PARTYLINEPAGER_PORT:-7681}:7681"
+    volumes:
+      - ${APP_DATA_DIR}/config:/config
+    environment:
+      PLP_PROVIDERS: "tor,web"
+      PLP_AUTO_START: "0"
+      PLP_HEADLESS: "0"
+      PLP_WEB_BASE_URL: "https://p2p.mirotalk.com"
+      TTYD_CREDENTIAL: ""
+      TELEGRAM_TOKEN: ""
+      DISCORD_TOKEN: ""
+      MATRIX_HOMESERVER: ""
+      MATRIX_USER: ""
+      MATRIX_PASSWORD: ""
+      MATRIX_STORE_PATH: "/var/lib/partylinepager/matrix"
+      IRC_SERVER: ""
+      IRC_PORT: "6697"
+      IRC_NICK: "partylinepager"
+      IRC_TLS: "true"
+      IRC_CHANNEL: ""
+      IRC_ACCOUNT: ""
+      IRC_PASSWORD: ""
+      XMPP_JID: ""
+      XMPP_PASSWORD: ""
+      MASTODON_INSTANCE: ""
+      MASTODON_TOKEN: ""
+      MATTERMOST_URL: ""
+      MATTERMOST_TOKEN: ""
+      SIGNAL_NUMBER: ""
+      EMAIL_SMTP_HOST: ""
+      EMAIL_SMTP_PORT: "587"
+      EMAIL_SMTP_USER: ""
+      EMAIL_SMTP_PASSWORD: ""
+      EMAIL_IMAP_HOST: ""
+      EMAIL_FROM: ""

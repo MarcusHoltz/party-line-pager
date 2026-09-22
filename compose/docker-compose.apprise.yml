@@ -1,0 +1,25 @@
+# Apprise: outbound reach for the 130+ services that will never get an adapter.
+#
+#   docker compose -f docker-compose.yml -f compose/docker-compose.apprise.yml up -d
+#
+# Only needed if the roster holds `apprise:` endpoints, which only an admin can
+# add (`partylinepagerctl add apprise:ntfy://ntfy.sh/partylinepager`). Without this file
+# the daemon still starts and every native adapter still works; an `apprise:`
+# endpoint simply fails its delivery and says so.
+#
+# Stateless: the partyline pager hands it a target URL per call, it stores
+# nothing. The address the daemon posts to is `apprise_url` under [fanout] in
+# policy.toml.
+
+services:
+  partylinepagerd:
+    depends_on:
+      - apprise
+
+  apprise:
+    image: caronc/apprise:latest
+    restart: unless-stopped
+    environment:
+      APPRISE_STATEFUL_MODE: "disabled"
+    expose:
+      - "8000"

@@ -1,0 +1,61 @@
+# The daemon, and nothing else.
+#
+# The partyline pager is one base file plus one overlay per thing you
+# actually run:
+#
+#   docker compose -f docker-compose.yml -f compose/docker-compose.telegram.yml up -d
+#
+# Typing that on every command gets old, so put the list in .env instead and
+# every plain `docker compose` in this directory means the right thing:
+#
+#   COMPOSE_FILE=docker-compose.yml:compose/docker-compose.telegram.yml
+#
+# The README section "Compose files" has a recipe for each combination.
+# `./partylinepager.sh` works the list out from policy.toml and adapters.toml, so the
+# menu path never needs any of this typed.
+#
+#   compose/docker-compose.telegram.yml    one per network: telegram, matrix,
+#   compose/docker-compose.matrix.yml      irc, xmpp, mastodon, email, signal,
+#   compose/docker-compose.irc.yml         mattermost. Each one passes exactly
+#   compose/docker-compose.xmpp.yml        the secrets that network needs, so a
+#   compose/docker-compose.mastodon.yml    token you do not use is not in the
+#   compose/docker-compose.email.yml       daemon's environment at all. Signal
+#   compose/docker-compose.signal.yml      is the only one that adds a container.
+#   compose/docker-compose.mattermost.yml
+#   compose/docker-compose.discord.yml
+#
+#   compose/docker-compose.tor.yml         the Tor party line provider, and the
+#                                          only thing that needs the Docker socket
+#   compose/docker-compose.apprise.yml     the outbound catch-all sidecar, for
+#                                          the 130+ services without an adapter
+#   compose/docker-compose.build-tools.yml build-stage container for cargo
+#                                          commands (audit and update hooks)
+#
+# Everything this deployment needs lives in this directory. There are no named
+# Docker volumes on purpose: `tar` this directory up, move it to another host,
+# unpack it, bring it up again, and the roster, the quotas and the Signal
+# device registration all come with it.
+#
+# Every path below is relative to this file. Nothing is written anywhere else on
+# the host except the image layer cache, which is rebuildable.
+
+services:
+  partylinepagerd:
+    build: .
+    restart: unless-stopped
+    # Run as you, not as root, so everything written into ./config/state belongs to
+    # the user who owns this directory and the whole thing stays movable
+    # without sudo. See .env.example; unset means root, which still works.
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    environment:
+      RUST_LOG: "info"
+      # Credentials referenced as env:NAME from adapters.toml arrive from the
+      # per-network overlay files, not from here. Loading only the overlays you
+      # use keeps every other secret out of this process.
+    command: ["--state", "/etc/partylinepager/state"]
+    volumes:
+      # Config and state live under the same mount. Config files (policy.toml,
+      # adapters.toml) are read-only to the daemon; the state/ subdirectory is
+      # created by the daemon on first run via create_dir_all. One mount means
+      # no empty directories to ship or pre-create.
+      - ./config:/etc/partylinepager

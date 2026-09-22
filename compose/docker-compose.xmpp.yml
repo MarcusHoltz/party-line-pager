@@ -1,0 +1,10 @@
+# XMPP. No sidecar: the daemon connects to the server as an ordinary client.
+#
+#   docker compose -f docker-compose.yml -f compose/docker-compose.xmpp.yml up -d
+#
+# Needs `[xmpp]` in adapters.toml and XMPP_PASSWORD in .env.
+
+services:
+  partylinepagerd:
+    environment:
+      XMPP_PASSWORD: "${XMPP_PASSWORD:-}"

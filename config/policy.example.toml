@@ -1,0 +1,154 @@
+# PartylinePager policy.
+#
+# Admin-owned and read-only to the daemon. Safe to keep in version control:
+# there are no secrets here (those live in adapters.toml). The daemon re-reads
+# this file only at startup, so restart partylinepagerd after editing it.
+
+[instance]
+# Shown in broadcasts and in `help`.
+name = "PartylinePager"
+
+# open     anyone who messages the bot is subscribed immediately
+# approval requests wait for `partylinepagerctl approve`
+# closed   nobody new gets in
+#
+# With `open`, anybody who finds the bot receives the room address and the
+# shared secret. That is the right setting for a public hangout and the wrong
+# one for anything else.
+signups = "approval"
+
+# Tier assigned to a new subscriber.
+default_tier = "weekly"
+
+# How long a room lives before the teardown hook runs. Nobody is tracking
+# occupancy, so this is a wall clock, not an idle timer: a long call gets cut
+# off when it expires.
+room_ttl = "2h"
+
+# Ceiling on the provider hook, for whichever provider is slowest. Rotating a
+# key forces a fresh bootstrap: one to three minutes for Tor, about 23 seconds
+# for I2P, immediate for Reticulum and web. Keep this generous.
+hook_timeout = "300s"
+
+# Boot default for the kill switch. `partylinepagerctl pause` flips it at runtime
+# without a restart.
+paused = false
+
+# inline  the address and secret (or room URL) travel in the broadcast itself,
+#         in plain text on whatever chat network delivers it. The default.
+# link    each subscriber gets their own one-time Yopass (https://share.yopass.se)
+#         link instead: opening it burns it, and nobody who did not receive
+#         their own copy can read it. Minted against yopass_url/yopass_api
+#         below (the public share.yopass.se by default); requires the `yopass` CLI
+#         in the image (built in by default, see Dockerfile and README's
+#         "Link mode" section).
+creds_delivery = "inline"
+
+# Only read when creds_delivery = "link". Point both at your own deployment
+# to keep minted links (and the CLI's minting request) off the public
+# share.yopass.se/api2.yopass.se.
+yopass_url = "https://share.yopass.se"
+yopass_api = "https://api2.yopass.se"
+
+[fanout]
+# The Apprise sidecar. Only used for `apprise:<url>` endpoints an admin adds by
+# hand; the nine native adapters deliver through their own sessions.
+apprise_url = "http://apprise:8000/notify"
+timeout = "30s"
+concurrency = 8
+
+# Each [provider.*] section adds one command subscribers can type. A section that
+# is present must be complete; delete a whole section to remove that command from
+# this instance. At least one must remain.
+#
+#   tor         a real Tor onion service plus a shared secret.
+#   i2p         the same thing over I2P, as a .b32.i2p address. Comes up in
+#               about 23 seconds against Tor's one to three minutes.
+#   rns         the same thing over Reticulum, as a 32-character hash. Fastest
+#               of the three and needs no port forwarding, but it is NOT onion
+#               routing: the relay sees every caller's IP address, the address
+#               is announced across the network, and reachability rides on
+#               public transport nodes run by volunteers. Reach for it when
+#               getting connected is the point, not when anonymity is.
+#   web         a plain video-call link. Nothing is provisioned and there is no
+#               secret: the unguessable URL is the access control.
+#
+# The first three are privileged: their hooks drive Docker, which is root on
+# this host. Each also needs its own checkout and its own compose overlay; see
+# compose/docker-compose.tor.yml, compose/docker-compose.i2p.yml and
+# compose/docker-compose.rns.yml.
+#
+# Every party line needs the matching build of the partyline.sh client at the
+# other end. The broadcast says which one and links it, so a subscriber who
+# types a command they have no client for finds that out in the message rather
+# than after a failed call.
+
+[provider.tor]
+up = "/opt/partylinepager/hooks/provider-tor.sh"
+down = "/opt/partylinepager/hooks/teardown-tor.sh"
+
+[provider.i2p]
+up = "/opt/partylinepager/hooks/provider-i2p.sh"
+down = "/opt/partylinepager/hooks/teardown-i2p.sh"
+
+[provider.rns]
+up = "/opt/partylinepager/hooks/provider-rns.sh"
+down = "/opt/partylinepager/hooks/teardown-rns.sh"
+
+[provider.web]
+up = "/opt/partylinepager/hooks/provider-web.sh"
+down = "/opt/partylinepager/hooks/teardown-web.sh"
+# The instance rooms are minted on: your own MiroTalk, Jitsi, or any other
+# self-hosted alternative. This default is the public MiroTalk instance, which
+# means the room list, the TURN servers and the logs are somebody else's.
+# Point it at your own deployment for anything that matters.
+base_url = "https://p2p.mirotalk.com"
+# Segment(s) between base_url and the room slug. MiroTalk expects /join/<room>,
+# so "join" is the default. A self-hosted Jitsi that puts rooms straight under
+# the domain (/<room>) wants this empty (path = ""). Multiple segments are
+# fine too, e.g. "conf/rooms". No leading or trailing slashes needed, they are
+# trimmed either way.
+path = "join"
+# Uncomment to mint the same room slug on every room instead of a fresh
+# random one, so the link never changes and regulars can join without waiting
+# for a new one each time. Same access control as a random slug: whoever has
+# ever seen this URL can join, so treat it as a standing invite, not a secret.
+# static_slug = "movie-night"
+
+# Tiers are matched by name against each subscriber's `tier` field.
+#
+#   may_open         false makes the tier receive-only
+#   may_receive       false makes it write-only
+#   window            rolling quota: "max_rooms rooms per <window> since the
+#                     oldest one still in it". "0s" means unlimited. Not
+#                     calendar-aligned, so there is no thundering herd every
+#                     Monday at 00:00.
+#   max_rooms        how many rooms fit inside one window before it is
+#                     exhausted. Default 1. Ignored when window is "0s".
+#   hold_for_approval park the request until `partylinepagerctl approve-request`
+#   may_close         false stops this tier from closing a room it opened early
+
+[[tier]]
+name = "lurker"
+may_open = false
+
+[[tier]]
+name = "weekly"
+window = "168h"
+hold_for_approval = true
+
+[[tier]]
+name = "daily"
+window = "24h"
+
+# 2 rooms per 24h instead of 1 every 12h: the two may land back to back,
+# rather than being forced 12h apart.
+[[tier]]
+name = "power"
+window = "24h"
+max_rooms = 2
+
+# Admins, journalists, anybody who may summon people at any hour.
+[[tier]]
+name = "trusted"
+window = "0s"

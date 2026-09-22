@@ -1,0 +1,30 @@
+# PLP-owned tor-party-line relay compose file.
+#
+# Why this exists instead of using party-lines/tor-party-line/:
+#   - The upstream compose uses build: . (requires a git checkout)
+#   - The upstream compose mounts /dev/snd and PulseAudio (fails on servers)
+#   - The upstream image: tag is local-only (can't pull from a registry)
+#
+# This file solves all three: registry image, no audio, no build context.
+# Runtime state (data/, secrets/) lands in this directory (gitignored).
+#
+# To use a local build from a git checkout instead, set
+# TOR_PARTYLINE_DIR in .env (see .env.example).
+
+services:
+  partyline:
+    image: marcusholtz/tor-party-line:latest
+    container_name: tor-party-line
+    restart: unless-stopped
+    stdin_open: true
+    command: ["relay"]
+    volumes:
+      - ./data/docker/tor:/var/lib/tor:z
+      - ./data/docker/partyline:/data/.partyline:z
+      - ./secrets:/run/secrets:ro
+    environment:
+      - TERM=xterm-256color
+      - SHARED_SECRET_FILE=/run/secrets/shared_secret.txt
+      - LISTEN_PORT=${LISTEN_PORT:-7777}
+      - CIPHER=${CIPHER:-aes-256-cbc}
+      - HMAC_AUTH=${HMAC_AUTH:-1}

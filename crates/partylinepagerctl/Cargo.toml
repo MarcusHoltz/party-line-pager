@@ -1,0 +1,18 @@
+[package]
+name = "partylinepagerctl"
+description = "Host-only admin CLI for PartylinePager. Never reachable from a chat network."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+partylinepager-core.workspace = true
+anyhow.workspace = true
+chrono.workspace = true
+clap.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+tempfile = "3"

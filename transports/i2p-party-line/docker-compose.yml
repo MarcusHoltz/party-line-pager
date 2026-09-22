@@ -1,0 +1,32 @@
+# PLP-owned i2p-party-line relay compose file.
+#
+# Why this exists instead of using party-lines/i2p-party-line/:
+#   - The upstream compose uses build: . (requires a git checkout)
+#   - The upstream compose mounts /dev/snd and PulseAudio (fails on servers)
+#   - The upstream image: tag is local-only (can't pull from a registry)
+#
+# This file solves all three: registry image, no audio, no build context.
+# Runtime state (data/, secrets/) lands in this directory (gitignored).
+#
+# Volume structure matches hooks/i2p-relay.override.yml exactly, so
+# the override layered by provider-i2p.sh is a no-op.
+#
+# To use a local build from a git checkout instead, set
+# I2P_PARTYLINE_DIR in .env (see .env.example).
+
+services:
+  partyline:
+    image: marcusholtz/i2p-party-line:latest
+    container_name: i2p-party-line
+    restart: unless-stopped
+    stdin_open: true
+    command: ["relay"]
+    volumes:
+      - ./data/docker/partyline:/data/.partyline
+      - ./secrets:/run/secrets:ro
+    environment:
+      - TERM=xterm-256color
+      - SHARED_SECRET_FILE=/run/secrets/shared_secret.txt
+      - LISTEN_PORT=${LISTEN_PORT:-7777}
+      - CIPHER=${CIPHER:-aes-256-cbc}
+      - HMAC_AUTH=${HMAC_AUTH:-1}

@@ -1,0 +1,13 @@
+# IRC. No sidecar: the daemon connects to the network as an ordinary client.
+#
+#   docker compose -f docker-compose.yml -f compose/docker-compose.irc.yml up -d
+#
+# Needs `[irc]` in adapters.toml. IRC_PASSWORD in .env is the services account
+# password, sent over SASL PLAIN; leave it unset to connect without logging in.
+#
+# Nothing here starts a server.
+
+services:
+  partylinepagerd:
+    environment:
+      IRC_PASSWORD: "${IRC_PASSWORD:-}"

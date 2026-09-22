@@ -1,0 +1,135 @@
+# PartylinePager chat network credentials.
+#
+# chmod 600 this file and keep it out of version control. Any secret may be
+# written as `env:NAME` to read it from the environment instead, which is how
+# the compose file passes tokens without putting them on disk.
+#
+# Delete or set `enabled = false` on any section you do not use. Every section
+# is optional; a section that is present must be complete.
+
+# ---------------------------------------------------------------------------
+# Telegram. Token from @BotFather. Talk to the bot in a private chat.
+# ---------------------------------------------------------------------------
+[telegram]
+enabled = true
+token = "env:TELEGRAM_TOKEN"
+
+# ---------------------------------------------------------------------------
+# Matrix. End-to-end encrypted, and the best of the nine for carrying a secret.
+# store_path holds the device's E2EE keys: deleting it forces a fresh login and
+# loses the device identity.
+# ---------------------------------------------------------------------------
+[matrix]
+enabled = true
+homeserver = "https://matrix.example.org"
+user = "partylinepager"
+password = "env:MATRIX_PASSWORD"
+store_path = "/var/lib/partylinepager/matrix"
+
+# ---------------------------------------------------------------------------
+# IRC. Note that IRC has no offline delivery: a broadcast to somebody who is
+# not connected is simply lost. Tell IRC-only subscribers to add a second
+# endpoint.
+#
+# Register the nick with NickServ first, then set `password` to that account's
+# password. It is sent over SASL PLAIN during connection registration, which is
+# early enough to claim a reserved nick; a network that reserves nicknames will
+# otherwise refuse the connection or rename the bot, and a renamed bot receives
+# nothing. `account` is only needed when the services account and the nick
+# differ. Leaving `password` out connects anonymously, which is fine on a
+# network that reserves nothing.
+#
+# SASL PLAIN sends the password base64-encoded, not encrypted, so leave
+# `tls = true`.
+#
+# `channels` is optional and only affects where the bot idles so people can
+# find it. Channel traffic is never treated as a command.
+# ---------------------------------------------------------------------------
+[irc]
+enabled = true
+server = "irc.libera.chat"
+port = 6697
+tls = true
+nick = "partylinepager"
+# account = "partylinepager"
+# password = "env:IRC_PASSWORD"
+channels = ["#your-channel"]
+
+# ---------------------------------------------------------------------------
+# XMPP. A bare JID, not a full one: the resource is chosen at connect time.
+# ---------------------------------------------------------------------------
+[xmpp]
+enabled = true
+jid = "partylinepager@example.org"
+password = "env:XMPP_PASSWORD"
+# STARTTLS before logging in. Leave it alone: false sends the password over the
+# wire in the clear, and SASL does not save you. It exists for the throwaway
+# server the live tests run against, which has no certificate to verify.
+tls = true
+
+# ---------------------------------------------------------------------------
+# Mastodon. Application token with read:notifications and write:statuses.
+# Only direct-visibility mentions are treated as commands, and every reply is
+# sent with direct visibility.
+# ---------------------------------------------------------------------------
+[mastodon]
+enabled = true
+base_url = "https://mastodon.example.org"
+access_token = "env:MASTODON_TOKEN"
+poll_interval = "30s"
+
+# ---------------------------------------------------------------------------
+# Email. The universal fallback: anybody on any service can drive the bot from
+# a mail client. Unseen messages are read and then marked seen.
+# ---------------------------------------------------------------------------
+[email]
+enabled = true
+imap_host = "imap.example.org"
+imap_port = 993
+imap_user = "partylinepager@example.org"
+imap_password = "env:IMAP_PASSWORD"
+mailbox = "INBOX"
+
+smtp_host = "smtp.example.org"
+smtp_port = 587
+smtp_user = "partylinepager@example.org"
+smtp_password = "env:SMTP_PASSWORD"
+from = "partylinepager@example.org"
+
+# Encrypt both legs. Leave it alone: false sends the mailbox password in the
+# clear over IMAP and SMTP both. It exists for the throwaway server the live
+# tests run against, which has no certificate to verify.
+tls = true
+poll_interval = "60s"
+
+# ---------------------------------------------------------------------------
+# Signal, through a signal-cli-rest-api container. Register or link the number
+# once against that container before enabling this. Requires the container's
+# MODE=json-rpc (docker-compose.yml sets this): receiving holds a websocket
+# open rather than polling, so there is no poll_interval to set here.
+# ---------------------------------------------------------------------------
+[signal]
+enabled = true
+rest_url = "http://signal-cli-rest-api:8080"
+number = "+15555550100"
+
+# ---------------------------------------------------------------------------
+# Mattermost. Self-hosted, so there is no roster leak and no platform policy
+# risk. access_token is a personal or bot access token from a user with
+# EnableUserAccessTokens on and the create_user_access_token permission. Only
+# direct posts are treated as commands.
+# ---------------------------------------------------------------------------
+[mattermost]
+enabled = true
+base_url = "https://mattermost.example.org"
+access_token = "env:MATTERMOST_TOKEN"
+
+# ---------------------------------------------------------------------------
+# Discord. Bot token from the Developer Portal. A bot may only DM someone it
+# shares a guild with, so subscribers join a lobby server first, then DM the
+# bot; see the README's "Setting up Discord" section for the full flow and
+# why the lobby server does not leak the roster.
+# ---------------------------------------------------------------------------
+[discord]
+enabled = true
+token = "env:DISCORD_TOKEN"

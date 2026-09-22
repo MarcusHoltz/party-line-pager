@@ -1,0 +1,31 @@
+# Relay-only overrides for i2p-party-line's compose file, layered on by
+# hooks/provider-i2p.sh. Never edited into the checkout itself, so the upstream
+# repo stays exactly as it ships.
+#
+# Two things the shipped file does for an interactive user on a desktop are
+# wrong for a PartylinePager relay on a server:
+#
+#   devices: /dev/snd  A relay makes no sound. On a headless host there is no
+#                      /dev/snd at all, and `docker compose up` fails outright
+#                      on the missing device rather than starting.
+#   the PulseAudio     Same reason. relay_mode never calls
+#   socket mount       detect_audio_backend (audio_record, start_recording,
+#                      play_chunk, test_audio, show_status, _pick_audio_device
+#                      and _audio_diagnostics are the only callers, and none is
+#                      on the relay path), so the socket is dead weight.
+#
+# `!reset` and `!override` rather than plain values: compose MERGES sequences,
+# so a bare `devices: []` leaves the original entries in place. `!reset` drops
+# a key outright; `!override` replaces a list instead of appending to it. Both
+# verified with `docker compose config`, and both need Compose v2.24 or newer.
+#
+# stdin_open stays true, inherited from the base file. It is load-bearing: the
+# relay's keyboard poll is a `read -r -t 2` with no is-a-terminal guard, so on
+# a closed stdin it hits EOF instantly and spins the loop at full speed.
+
+services:
+  partyline:
+    devices: !reset []
+    volumes: !override
+      - ./data/docker/partyline:/data/.partyline
+      - ./secrets:/run/secrets:ro

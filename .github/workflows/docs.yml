@@ -1,0 +1,205 @@
+# =========================================================================
+# Deploy Docs
+# =========================================================================
+#
+# QUICK START
+#   Go to Actions > "Deploy Docs" > Run workflow.
+#   No secrets or configuration needed. Works on forks.
+#
+# WHAT IT DOES
+#   1. Detects the correct Pages URL from the repository name,
+#      or uses a custom domain if you provide one.
+#   2. Builds the MkDocs Material site from docs/ using the same
+#      squidfunk/mkdocs-material Docker image the local build uses.
+#   3. Uploads the rendered HTML as a GitHub Pages artifact.
+#   4. Deploys to GitHub Pages.
+#
+# WHEN IT RUNS
+#   Manual only: workflow_dispatch. Click "Run workflow" in Actions.
+#
+# PREREQUISITES
+#   Repo Settings > Pages > Source must be set to "GitHub Actions".
+#   This is the only manual step required.
+#
+# -------------------------------------------------------------------------
+# CUSTOM DOMAIN (three ways, pick one)
+# -------------------------------------------------------------------------
+#
+# By default the workflow computes the site URL from the repo:
+#   https://<owner>.github.io/<repo>/
+# This works immediately for any fork with zero configuration.
+#
+# If you own a custom domain, pick whichever method you prefer.
+# All three produce the same result: a CNAME file in the build
+# output and the correct site_url in mkdocs.yml.
+#
+# METHOD 1: Workflow input (one-off, nothing stored in git)
+#   Click "Run workflow" and type your domain in the
+#   "Custom domain" field. Good for testing a domain before
+#   committing to it. You have to type it each time you run
+#   the workflow.
+#
+# METHOD 2: Repository variable (persistent, not in git)
+#   Go to Settings > Secrets and variables > Actions > Variables
+#   and create a variable named DOCS_CNAME with your domain as
+#   the value (e.g. docs.example.com). The workflow reads it
+#   automatically on every run. The domain stays out of the
+#   repo, so forks don't inherit a CNAME that doesn't belong
+#   to them.
+#
+# METHOD 3: Edit this file (persistent, stored in git)
+#   Set DOCS_CNAME below (under env:) to your domain. Forks
+#   will inherit this value, so only use this method if
+#   everyone sharing the repo uses the same domain.
+#
+# Precedence: workflow input > repository variable > env below.
+# If none are set, the default .github.io URL is used.
+#
+# DNS SETUP (required for all three methods):
+#   1. Add a DNS CNAME record: docs.example.com -> <owner>.github.io
+#   2. In repo Settings > Pages > Custom domain, enter the domain
+#   3. Check "Enforce HTTPS" after DNS propagates
+#
+# NOTE: You cannot serve from both the .github.io URL and a
+# custom domain simultaneously. With a CNAME configured, the
+# .github.io URL will 301 redirect to the custom domain.
+#
+# =========================================================================
+
+name: Deploy Docs
+
+on:
+  workflow_dispatch:
+    inputs:
+      custom_domain:
+        description: >
+          Custom domain (optional, method 1). Leave blank to use
+          the DOCS_CNAME variable or the default .github.io URL.
+          Example: docs.example.com
+        required: false
+        default: ""
+        type: string
+
+# -------------------------------------------------------------------------
+# METHOD 3: Hardcode your custom domain here. Uncomment and edit.
+# This is the simplest option if you always deploy to the same
+# domain and don't mind the value being in the git history.
+# -------------------------------------------------------------------------
+env:
+  # DOCS_CNAME: "docs.example.com"
+  DOCS_CNAME: ""
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Resolve custom domain
+        id: domain
+        env:
+          INPUT_DOMAIN: ${{ inputs.custom_domain }}
+          VAR_DOMAIN: ${{ vars.DOCS_CNAME }}
+          FILE_DOMAIN: ${{ env.DOCS_CNAME }}
+        run: |
+          # Precedence: workflow input > repo variable > env in file
+          if [ -n "$INPUT_DOMAIN" ]; then
+            DOMAIN="$INPUT_DOMAIN"
+            echo "Source: workflow input"
+          elif [ -n "$VAR_DOMAIN" ]; then
+            DOMAIN="$VAR_DOMAIN"
+            echo "Source: DOCS_CNAME repository variable"
+          elif [ -n "$FILE_DOMAIN" ]; then
+            DOMAIN="$FILE_DOMAIN"
+            echo "Source: DOCS_CNAME in workflow env"
+          else
+            DOMAIN=""
+            echo "Source: none (using default Pages URL)"
+          fi
+          echo "domain=${DOMAIN}" >> "$GITHUB_OUTPUT"
+
+      - name: Compute site URL
+        id: url
+        env:
+          DOMAIN: ${{ steps.domain.outputs.domain }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          if [ -n "$DOMAIN" ]; then
+            SITE_URL="https://${DOMAIN}/"
+          else
+            SITE_URL="https://${REPO_OWNER}.github.io/${REPO_NAME}/"
+          fi
+          echo "site_url=${SITE_URL}" >> "$GITHUB_OUTPUT"
+          echo "Site URL: ${SITE_URL}"
+
+      - name: Set site_url in mkdocs.yml
+        env:
+          SITE_URL: ${{ steps.url.outputs.site_url }}
+        run: |
+          sed -i "s|^site_url:.*|site_url: ${SITE_URL}|" \
+            docs/website/mkdocs.yml
+
+      - name: Build docs
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/docs:/docs:ro" \
+            -v "${{ github.workspace }}/docs/website/mkdocs.yml:/mkdocs.yml:ro" \
+            -v "${{ github.workspace }}/site:/site" \
+            squidfunk/mkdocs-material:9.7.7 \
+            build --config-file /mkdocs.yml --strict --clean
+
+      - name: Add CNAME for custom domain
+        if: steps.domain.outputs.domain != ''
+        env:
+          DOMAIN: ${{ steps.domain.outputs.domain }}
+        run: echo "$DOMAIN" > site/CNAME
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+
+  deploy-docs:
+    runs-on: ubuntu-24.04
+    needs: build-docs
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+      - name: Job summary
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<BANNER
+          \`\`\`
+           ____             _         _ _
+          |  _ \\ __ _ _ __ | |_ _   _| (_)_ __   ___
+          | |_) / _\` | '_ \\| __| | | | | | '_ \\ / _ \\
+          |  __/ (_| | |  _| |_| |_| | | | | | |  __/
+          |_|   \\__,_|_|  \\ \\__|\\___, |_|_|_| |_|\\___|
+          |  _ \\ __ _  __ _  ___|___/
+          | |_) / _\` |/ _\` |/ _ \\ '__|
+          |  __/ (_| | (_| |  __/ |
+          |_|   \\__,_|\\__, |\\___|_|
+                      |___/
+
+          Job: deploy-docs
+          \`\`\`
+
+          **Live at:** ${PAGE_URL}
+          BANNER

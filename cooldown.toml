@@ -1,0 +1,31 @@
+# cargo-cooldown config. See hooks/update-cargo-deps.sh and the "Supply
+# chain security" section of README.md.
+#
+# This is an update-time gate, not an audit of the committed lockfile. It
+# applies when `cargo cooldown update` resolves a new dependency graph: any
+# version published more recently than the window below is rejected in favour
+# of the newest older version cargo still accepts. Most supply-chain
+# compromises (like arrayref@0.3.10, Wiz writeup 2026-08-20) get caught and
+# pulled within hours to days, so refusing to adopt anything that fresh is
+# the single highest-value automated check here. deny.toml's [bans] list is
+# what catches the ones that don't get caught in time; this is what catches
+# the ones that haven't happened yet.
+#
+# `lockfile-baseline = "floor"` means versions already present in Cargo.lock
+# are the protected baseline and are never downgraded. That is what makes
+# this safe to run on an existing lockfile, and also why it says nothing
+# about the publish age of versions that are already locked. Do not read a
+# clean run as "everything in Cargo.lock is at least 7 days old".
+#
+# `incompatible-publish-age = "deny"` fails closed: if cargo still requires a
+# fresh version after cooling, the update is abandoned and the original
+# Cargo.lock is restored.
+#
+# 7-day window. See Renovate's minimumReleaseAge for the matching policy.
+
+[cooldown]
+incompatible-publish-age = "deny"
+lockfile-baseline = "floor"
+
+[registry]
+global-min-publish-age = "7 days"

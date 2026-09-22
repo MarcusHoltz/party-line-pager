@@ -1,0 +1,368 @@
+# =========================================================================
+# Build & Publish
+# =========================================================================
+#
+# QUICK START
+#   Actions > "Build & Publish" > Run workflow.
+#   Fill in the version (e.g. "1.0.0", no "v" prefix).
+#   Check which registries to push to, then click "Run workflow".
+#
+# DRY RUN (build without pushing)
+#   Check "Build only (dry run)" to build both images without
+#   pushing to any registry. No secrets needed. Works on forks.
+#   Use this to verify images compile before doing a real release.
+#
+# -------------------------------------------------------------------------
+# REGISTRIES
+# -------------------------------------------------------------------------
+#
+# GHCR (GitHub Container Registry)
+#   Enabled by default. No setup needed.
+#   Authenticates automatically via GITHUB_TOKEN (built in to every
+#   GitHub repo, including forks).
+#   Images land at: ghcr.io/<your-github-username>/<image-name>
+#
+# Docker Hub
+#   Optional. Requires two repository secrets:
+#     Settings > Secrets and variables > Actions > New repository secret
+#
+#     DOCKERHUB_USERNAME   your Docker Hub username
+#     DOCKERHUB_TOKEN      a Personal Access Token (NOT your password)
+#                          Create one: hub.docker.com > Account Settings >
+#                          Security > Access Tokens
+#
+#   Images land at: <your-github-username>/<image-name>
+#   If your Docker Hub username differs from your GitHub username,
+#   edit DH_NS in the env block below.
+#
+# GitLab Container Registry
+#   NOT handled here. Use .gitlab-ci.yml for GitLab CR pushes.
+#   Each CI platform pushes only to its own native registry.
+#
+# -------------------------------------------------------------------------
+# WHAT GETS BUILT
+# -------------------------------------------------------------------------
+#
+# Two images, built in parallel via matrix:
+#
+#   partylinepager        V2 modular image (docker-compose deployment)
+#                         Built from: ./Dockerfile
+#
+#   partylinepager-full   V1 all-in-one image (single container)
+#                         Built from: deploy/Dockerfile.full
+#
+# Both get tagged with :latest and :<version> on each registry.
+#
+# -------------------------------------------------------------------------
+# CACHING
+# -------------------------------------------------------------------------
+# Docker layers and cargo artifacts are cached via GitHub Actions
+# cache. The test/audit gate jobs and the final push-images job all
+# share the same layer cache (scoped per image), so a recent
+# "Test & Audit" run warms the cache for a release.
+#
+# -------------------------------------------------------------------------
+# SELF-HOSTED REGISTRY
+# -------------------------------------------------------------------------
+# Uncomment the marked sections below to add a private registry.
+# You need three things:
+#   1. SELFHOSTED_USERNAME secret (registry login)
+#   2. SELFHOSTED_TOKEN secret (registry password or token)
+#   3. The registry URL, entered as a workflow input at run time
+#
+# -------------------------------------------------------------------------
+# FOR FORKS / NEW USERS
+# -------------------------------------------------------------------------
+# 1. Dry run works immediately. No secrets, no config.
+# 2. GHCR requires one setting: Settings > Actions > General >
+#    Workflow permissions > "Read and write permissions". The
+#    default (read-only) blocks the push. One-time change.
+# 3. Docker Hub (off by default): add DOCKERHUB_USERNAME and
+#    DOCKERHUB_TOKEN secrets, then check the Docker Hub box when
+#    running the workflow.
+# 4. Tests and audit run first. Images only build if both pass.
+#
+# =========================================================================
+
+name: Build & Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g. 1.0.0, no v prefix)"
+        required: true
+        type: string
+      dry_run:
+        description: "Build only (dry run, no push)"
+        type: boolean
+        default: false
+      push_dockerhub:
+        description: "Push to Docker Hub (needs DOCKERHUB secrets)"
+        type: boolean
+        default: false
+      push_ghcr:
+        description: "Push to GitHub Container Registry"
+        type: boolean
+        default: true
+      # -- Self-hosted registry (uncomment when ready) ---------------------
+      # push_selfhosted:
+      #   description: "Push to self-hosted registry"
+      #   type: boolean
+      #   default: false
+      # selfhosted_registry:
+      #   description: "Self-hosted registry URL (e.g. registry.example.com)"
+      #   type: string
+      #   default: ""
+
+env:
+  COMPOSE_PROJECT_NAME: partylinepager
+  # Registry namespaces (auto-adapt to forks).
+  # Override DH_NS if your Docker Hub username differs from GitHub.
+  DH_NS: ${{ github.repository_owner }}
+  GHCR_NS: ghcr.io/${{ github.repository_owner }}
+
+jobs:
+  # -- Gate: tests must pass before any image is built ---------------------
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet \
+            /opt/ghc /usr/local/share/powershell /usr/local/share/chromium
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Match container UID to runner
+        run: |
+          echo "HOST_UID=$(id -u)" >> "$GITHUB_ENV"
+          echo "HOST_GID=$(id -g)" >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      - name: Cache cargo artifacts
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .cache/cargo/registry
+            .cache/cargo/git
+            target
+          key: cargo-test-${{ hashFiles('Cargo.lock') }}
+          restore-keys: cargo-test-
+
+      - name: Build test image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          target: build
+          load: true
+          tags: ${{ env.COMPOSE_PROJECT_NAME }}-build-tools
+          cache-from: type=gha,scope=build-tools
+          cache-to: type=gha,mode=max,scope=build-tools
+
+      - name: Run tests
+        run: |
+          docker compose -f compose/docker-compose.build-tools.yml \
+            run --rm -T build-tools cargo test --workspace
+
+      - name: Job summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ```
+            ____            _         _ _
+           |  _ \ __ _ _ __| |_ _   _| (_)_ __   ___
+           | |_) / _` | '__| __| | | | | | '_ \ / _ \
+           |  __/ (_| | |  | |_| |_| | | | | | |  __/
+           |_|   \__,_|_|   \__|\__, |_|_|_| |_|\___|
+           |  _ \ __ _  __ _  __|___/ __
+           | |_) / _` |/ _` |/ _ \ '__|
+           |  __/ (_| | (_| |  __/ |
+           |_|   \__,_|\__, |\___|_|
+                        |___/
+          ```
+          **Job:** `test`
+          EOF
+
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet \
+            /opt/ghc /usr/local/share/powershell /usr/local/share/chromium
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Match container UID to runner
+        run: |
+          echo "HOST_UID=$(id -u)" >> "$GITHUB_ENV"
+          echo "HOST_GID=$(id -g)" >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      - name: Cache cargo artifacts
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .cache/cargo/registry
+            .cache/cargo/git
+            .cache/cargo/pinned
+          key: cargo-audit-${{ hashFiles('Cargo.lock') }}
+          restore-keys: cargo-audit-
+
+      - name: Build test image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          target: build
+          load: true
+          tags: ${{ env.COMPOSE_PROJECT_NAME }}-build-tools
+          cache-from: type=gha,scope=build-tools
+          cache-to: type=gha,mode=max,scope=build-tools
+
+      - name: Audit dependencies (pinned cargo-deny)
+        run: ./hooks/audit-cargo-deps.sh
+
+      - name: Job summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ```
+            ____            _         _ _
+           |  _ \ __ _ _ __| |_ _   _| (_)_ __   ___
+           | |_) / _` | '__| __| | | | | | '_ \ / _ \
+           |  __/ (_| | |  | |_| |_| | | | | | |  __/
+           |_|   \__,_|_|   \__|\__, |_|_|_| |_|\___|
+           |  _ \ __ _  __ _  __|___/ __
+           | |_) / _` |/ _` |/ _ \ '__|
+           |  __/ (_| | (_| |  __/ |
+           |_|   \__,_|\__, |\___|_|
+                        |___/
+          ```
+          **Job:** `audit`
+          EOF
+
+  # -- Build and optionally push (matrix: full + compose) ------------------
+  push-images:
+    needs: [test, audit]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: partylinepager-full
+            file: deploy/Dockerfile.full
+            scope: full
+          - image: partylinepager
+            file: Dockerfile
+            scope: compose
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet \
+            /opt/ghc /usr/local/share/powershell /usr/local/share/chromium
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      # -- Registry logins (skipped on dry run) ----------------------------
+      - name: Log in to Docker Hub
+        if: inputs.push_dockerhub && !inputs.dry_run
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Log in to GHCR
+        if: inputs.push_ghcr && !inputs.dry_run
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # -- Self-hosted login (uncomment when ready) ------------------------
+      # - name: Log in to self-hosted registry
+      #   if: inputs.push_selfhosted && inputs.selfhosted_registry != '' && !inputs.dry_run
+      #   uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+      #   with:
+      #     registry: ${{ inputs.selfhosted_registry }}
+      #     username: ${{ secrets.SELFHOSTED_USERNAME }}
+      #     password: ${{ secrets.SELFHOSTED_TOKEN }}
+
+      - name: Assemble tags
+        id: tags
+        env:
+          VERSION: ${{ inputs.version }}
+          PUSH_DH: ${{ inputs.push_dockerhub }}
+          PUSH_GHCR: ${{ inputs.push_ghcr }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          IMAGE: ${{ matrix.image }}
+          # -- Self-hosted env (uncomment when ready) ----------------------
+          # PUSH_SELF: ${{ inputs.push_selfhosted }}
+          # SELF_REG: ${{ inputs.selfhosted_registry }}
+        run: |
+          DH_NS=$(echo "$DH_NS" | tr '[:upper:]' '[:lower:]')
+          GHCR_NS=$(echo "$GHCR_NS" | tr '[:upper:]' '[:lower:]')
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run: building ${IMAGE} without pushing"
+            echo "tags=${IMAGE}:${VERSION}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          TAGS=""
+          if [ "$PUSH_DH" = "true" ]; then
+            TAGS="${TAGS}${DH_NS}/${IMAGE}:latest
+          ${DH_NS}/${IMAGE}:${VERSION}
+          "
+          fi
+          if [ "$PUSH_GHCR" = "true" ]; then
+            TAGS="${TAGS}${GHCR_NS}/${IMAGE}:latest
+          ${GHCR_NS}/${IMAGE}:${VERSION}
+          "
+          fi
+          # -- Self-hosted tags (uncomment when ready) ---------------------
+          # if [ "$PUSH_SELF" = "true" ] && [ -n "$SELF_REG" ]; then
+          #   TAGS="${TAGS}${SELF_REG}/${IMAGE}:latest
+          # ${SELF_REG}/${IMAGE}:${VERSION}
+          # "
+          # fi
+          {
+            echo "tags<<EOF"
+            echo "$TAGS"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: ${{ matrix.file }}
+          push: ${{ !inputs.dry_run }}
+          tags: ${{ steps.tags.outputs.tags }}
+          cache-from: type=gha,scope=${{ matrix.scope }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.scope }}
+
+      - name: Job summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ```
+            ____            _         _ _
+           |  _ \ __ _ _ __| |_ _   _| (_)_ __   ___
+           | |_) / _` | '__| __| | | | | | '_ \ / _ \
+           |  __/ (_| | |  | |_| |_| | | | | | |  __/
+           |_|   \__,_|_|   \__|\__, |_|_|_| |_|\___|
+           |  _ \ __ _  __ _  __|___/ __
+           | |_) / _` |/ _` |/ _ \ '__|
+           |  __/ (_| | (_| |  __/ |
+           |_|   \__,_|\__, |\___|_|
+                        |___/
+          ```
+          **Job:** `push-images`
+          EOF

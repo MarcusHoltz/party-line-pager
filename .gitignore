@@ -1,0 +1,54 @@
+/target
+
+# User config and state. The .example files under config/ are the templates;
+# real config lives alongside them and is never committed.
+/config/*
+!/config/.gitkeep
+!/config/policy.example.toml
+!/config/adapters.example.toml
+/.env
+
+# Legacy root-level locations (pre-config/ consolidation). Keep these so an
+# upgrade doesn't accidentally expose secrets to `git add`.
+/policy.toml
+/adapters.toml
+/state
+/signal-cli
+/matrix-store
+
+# Build caches, kept in-tree so nothing lands in a Docker volume. Regenerable,
+# and the one directory worth excluding from an archive.
+/.cache
+
+# Separate projects' checkouts. Each has its own git repo and secrets/ dir;
+# never nest a repo inside this one.
+/party-lines
+
+# Transport runtime dirs. The compose files under transports/ are committed;
+# data/ and secrets/ are created at runtime and must not be tracked.
+/transports/*/data
+/transports/*/secrets
+
+# Docs website build output and local-only tooling. The finished HTML is
+# regenerable from docs/*.md + docs/website/mkdocs.yml, so /site and the
+# two local-only files below stay untracked. Everything else in
+# docs/website/ (mkdocs.yml and the theme assets in assets/) IS committed:
+# CI builds the site from the checkout.
+/site
+/docs/website/docker-compose.yml
+/docs/website/README.md
+
+# Claude Code project config (machine-specific).
+/.claude/
+/CLAUDE.md
+
+# TrueNAS chart test fixtures.
+/deploy/truenas/templates/test_values
+
+# Personal task tracking.
+/to-do
+
+# OS/editor cruft.
+.DS_Store
+*.swp
+*.swo

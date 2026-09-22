@@ -1,0 +1,15 @@
+# Mattermost. No sidecar: the daemon holds a websocket open to a server the
+# admin already runs.
+#
+#   docker compose -f docker-compose.yml -f compose/docker-compose.mattermost.yml up -d
+#
+# Needs `[mattermost]` in adapters.toml and MATTERMOST_TOKEN in .env: a
+# personal or bot access token from a user with EnableUserAccessTokens on and
+# the create_user_access_token permission.
+#
+# Nothing here starts a server.
+
+services:
+  partylinepagerd:
+    environment:
+      MATTERMOST_TOKEN: "${MATTERMOST_TOKEN:-}"

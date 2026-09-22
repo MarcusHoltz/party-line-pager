@@ -1,0 +1,39 @@
+/target
+Cargo.lock.bak
+
+# Build caches. Huge, regenerable, and never wanted in a build context.
+/.cache
+
+# Real configuration, not needed to build the image.
+/policy.toml
+/adapters.toml
+/.env
+
+# Local state: roster, quotas, the live room.
+/state
+
+# The Signal linked-device identity.
+/signal-cli
+
+# Separate projects' checkouts. Each has its own Docker Compose project and
+# gets bind-mounted at runtime, never copied into this image. Their runtime
+# data (e.g. Tor's chmod 700 key directory, i2pd's chmod 700 run dir) can
+# make the build context walk fail if these aren't excluded.
+/party-lines
+
+# Transport runtime dirs (bind-mounted, not baked into image).
+/transports/*/data
+/transports/*/secrets
+
+# Docs site tooling, theme assets, and build output. Nothing in docs/ is
+# COPYed into any app image; the docs build mounts docs/ read-only into
+# the mkdocs-material image at build/serve time, so these never belong in
+# this build context.
+/docs/website
+/site
+
+# V1 runtime config (bind-mounted, not baked into image).
+# Root-owned files from the container can block the build context walk.
+/config/*
+!/config/policy.example.toml
+!/config/adapters.example.toml

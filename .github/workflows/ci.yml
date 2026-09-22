@@ -1,0 +1,258 @@
+# =========================================================================
+# Test & Audit
+# =========================================================================
+#
+# QUICK START
+#   Go to Actions > "Test & Audit" > Run workflow.
+#   No secrets or configuration needed. Works on forks.
+#
+# WHAT IT DOES
+#   1. Builds the build-tools image (Rust toolchain + cargo-deny)
+#   2. unit-tests: `cargo test --workspace` against the full crate graph
+#   3. supply-chain-audit: `hooks/audit-cargo-deps.sh` (cargo-deny checks)
+#   4. Builds both Docker images (V2 compose + V1 full) to verify
+#      they compile. Nothing is pushed anywhere.
+#
+# WHEN IT RUNS
+#   - Manual: workflow_dispatch. Click "Run workflow" in Actions.
+#   - Automatic: on any PR that touches Cargo.lock, Cargo.toml,
+#     deny.toml, or cooldown.toml (e.g. Renovate dependency PRs).
+#
+# CACHING
+#   Docker layers and cargo artifacts are cached between runs via
+#   GitHub Actions cache. First run is slow (20-30 min cold build).
+#   Subsequent runs reuse cached layers and only rebuild what
+#   changed (typically 3-5 min).
+#
+# STAGES
+#   unit-tests + supply-chain-audit run in parallel. If both pass, the two image builds
+#   (compose + full) run in parallel. All four jobs are independent
+#   runners. Total wall time is roughly the longest single job.
+#
+# FOR FORKS
+#   Works immediately with zero configuration. Every job uses only
+#   local Docker operations (build, compose up, cargo test). No
+#   registry logins, no secrets, no network pushes. Caching works
+#   on forks too (GITHUB_TOKEN is automatic).
+#
+# =========================================================================
+
+name: Test & Audit
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'Cargo.lock'
+      - 'Cargo.toml'
+      - 'deny.toml'
+      - 'cooldown.toml'
+
+env:
+  COMPOSE_PROJECT_NAME: partylinepager
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet \
+            /opt/ghc /usr/local/share/powershell /usr/local/share/chromium
+          df -h /
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Match container UID to runner
+        run: |
+          echo "HOST_UID=$(id -u)" >> "$GITHUB_ENV"
+          echo "HOST_GID=$(id -g)" >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      - name: Cache cargo artifacts
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .cache/cargo/registry
+            .cache/cargo/git
+            target
+          key: cargo-test-${{ hashFiles('Cargo.lock') }}
+          restore-keys: cargo-test-
+
+      - name: Build test image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          target: build
+          load: true
+          tags: ${{ env.COMPOSE_PROJECT_NAME }}-build-tools
+          cache-from: type=gha,scope=build-tools
+          cache-to: type=gha,mode=max,scope=build-tools
+
+      - name: Run tests
+        run: |
+          docker compose -f compose/docker-compose.build-tools.yml \
+            run --rm -T build-tools cargo test --workspace
+
+      - name: Job summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ```
+            ____            _         _ _
+           |  _ \ __ _ _ __| |_ _   _| (_)_ __   ___
+           | |_) / _` | '__| __| | | | | | '_ \ / _ \
+           |  __/ (_| | |  | |_| |_| | | | | | |  __/
+           |_|   \__,_|_|   \__|\__, |_|_|_| |_|\___|
+           |  _ \ __ _  __ _  __|___/ __
+           | |_) / _` |/ _` |/ _ \ '__|
+           |  __/ (_| | (_| |  __/ |
+           |_|   \__,_|\__, |\___|_|
+                        |___/
+          ```
+          **Job:** `unit-tests`
+          EOF
+
+  supply-chain-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet \
+            /opt/ghc /usr/local/share/powershell /usr/local/share/chromium
+          df -h /
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Match container UID to runner
+        run: |
+          echo "HOST_UID=$(id -u)" >> "$GITHUB_ENV"
+          echo "HOST_GID=$(id -g)" >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      - name: Cache cargo artifacts
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .cache/cargo/registry
+            .cache/cargo/git
+            .cache/cargo/pinned
+          key: cargo-audit-${{ hashFiles('Cargo.lock') }}
+          restore-keys: cargo-audit-
+
+      - name: Build test image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          target: build
+          load: true
+          tags: ${{ env.COMPOSE_PROJECT_NAME }}-build-tools
+          cache-from: type=gha,scope=build-tools
+          cache-to: type=gha,mode=max,scope=build-tools
+
+      - name: Audit dependencies (pinned cargo-deny)
+        run: ./hooks/audit-cargo-deps.sh
+
+      - name: Job summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ```
+            ____            _         _ _
+           |  _ \ __ _ _ __| |_ _   _| (_)_ __   ___
+           | |_) / _` | '__| __| | | | | | '_ \ / _ \
+           |  __/ (_| | |  | |_| |_| | | | | | |  __/
+           |_|   \__,_|_|   \__|\__, |_|_|_| |_|\___|
+           |  _ \ __ _  __ _  __|___/ __
+           | |_) / _` |/ _` |/ _ \ '__|
+           |  __/ (_| | (_| |  __/ |
+           |_|   \__,_|\__, |\___|_|
+                        |___/
+          ```
+          **Job:** `supply-chain-audit`
+          EOF
+
+  build-compose-image:
+    needs: [unit-tests, supply-chain-audit]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet \
+            /opt/ghc /usr/local/share/powershell /usr/local/share/chromium
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      - name: Build V2 compose image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          cache-from: type=gha,scope=compose
+          cache-to: type=gha,mode=max,scope=compose
+
+      - name: Job summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ```
+            ____            _         _ _
+           |  _ \ __ _ _ __| |_ _   _| (_)_ __   ___
+           | |_) / _` | '__| __| | | | | | '_ \ / _ \
+           |  __/ (_| | |  | |_| |_| | | | | | |  __/
+           |_|   \__,_|_|   \__|\__, |_|_|_| |_|\___|
+           |  _ \ __ _  __ _  __|___/ __
+           | |_) / _` |/ _` |/ _ \ '__|
+           |  __/ (_| | (_| |  __/ |
+           |_|   \__,_|\__, |\___|_|
+                        |___/
+          ```
+          **Job:** `build-compose-image`
+          EOF
+
+  build-full-image:
+    needs: [unit-tests, supply-chain-audit]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet \
+            /opt/ghc /usr/local/share/powershell /usr/local/share/chromium
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      - name: Build full image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: deploy/Dockerfile.full
+          cache-from: type=gha,scope=full
+          cache-to: type=gha,mode=max,scope=full
+
+      - name: Job summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ```
+            ____            _         _ _
+           |  _ \ __ _ _ __| |_ _   _| (_)_ __   ___
+           | |_) / _` | '__| __| | | | | | '_ \ / _ \
+           |  __/ (_| | |  | |_| |_| | | | | | |  __/
+           |_|   \__,_|_|   \__|\__, |_|_|_| |_|\___|
+           |  _ \ __ _  __ _  __|___/ __
+           | |_) / _` |/ _` |/ _ \ '__|
+           |  __/ (_| | (_| |  __/ |
+           |_|   \__,_|\__, |\___|_|
+                        |___/
+          ```
+          **Job:** `build-full-image`
+          EOF
