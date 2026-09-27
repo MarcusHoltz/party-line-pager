@@ -1,8 +1,8 @@
-name: partylinepager
+name: party-line-pager
 services:
-  partylinepager:
-    image: marcusholtz/partylinepager-full:latest
-    container_name: partylinepager
+  party-line-pager:
+    image: marcusholtz/party-line-pager-full:latest
+    container_name: party-line-pager
     restart: unless-stopped
     deploy:
       resources:
@@ -28,10 +28,10 @@ services:
       MATRIX_HOMESERVER: ""
       MATRIX_USER: ""
       MATRIX_PASSWORD: ""
-      MATRIX_STORE_PATH: "/var/lib/partylinepager/matrix"
+      MATRIX_STORE_PATH: "/var/lib/party-line-pager/matrix"
       IRC_SERVER: ""
       IRC_PORT: "6697"
-      IRC_NICK: "partylinepager"
+      IRC_NICK: "party-line-pager"
       IRC_TLS: "true"
       IRC_CHANNEL: ""
       IRC_ACCOUNT: ""
@@ -153,15 +153,15 @@ services:
           description:
             en_US: "Config, state, and secrets directory"
 x-casaos:
-  id: com.github.marcusholtz.partylinepager
+  id: com.github.marcusholtz.party-line-pager
   architectures:
     - amd64
-  main: partylinepager
+  main: party-line-pager
   author: MarcusHoltz
   category: Communication
   description:
     en_US: |
-      PartylinePager opens a room on one chat network, and everyone
+      PartyLinePager opens a room on one chat network, and everyone
       who subscribed on any chat network gets a way into it. Supports
       Tor, I2P, and Reticulum party lines with Telegram, Discord,
       Matrix, IRC, XMPP, Mastodon, Mattermost, Signal, and Email
@@ -172,11 +172,11 @@ x-casaos:
   tagline:
     en_US: Multi-protocol room pager with Tor, I2P, and Reticulum
   title:
-    en_US: PartylinePager
+    en_US: PartyLinePager
   index: /
   port_map: "7681"
   version: "1.0.0"
   update_at: "2026-09-12"
-  website: "https://github.com/MarcusHoltz/PartylinePager"
-  repo: "https://github.com/MarcusHoltz/PartylinePager"
-  support: "https://github.com/MarcusHoltz/PartylinePager/discussions"
+  website: "https://github.com/MarcusHoltz/PartyLinePager"
+  repo: "https://github.com/MarcusHoltz/PartyLinePager"
+  support: "https://github.com/MarcusHoltz/PartyLinePager/discussions"

@@ -1,10 +1,10 @@
-[![PartylinePager](https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/posts/party-line-pager--tor-i2p-rns-call-pager.svg)](https://gitlab.com/MarcusHoltz/partylinepager)
+[![PartyLinePager](https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/posts/party-line-pager--tor-i2p-rns-call-pager.svg)](https://gitlab.com/MarcusHoltz/party-line-pager)
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](https://gitlab.com/MarcusHoltz/partylinepager/-/blob/main/LICENSE)
-[![Source: GitLab](https://img.shields.io/badge/source-GitLab-orange?style=for-the-badge&logo=gitlab)](https://gitlab.com/MarcusHoltz/partylinepager)
-[![Source: GitHub](https://img.shields.io/badge/source-GitHub-black?style=for-the-badge&logo=github)](https://github.com/MarcusHoltz/partylinepager)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](https://gitlab.com/MarcusHoltz/party-line-pager/-/blob/main/LICENSE)
+[![Source: GitLab](https://img.shields.io/badge/source-GitLab-orange?style=for-the-badge&logo=gitlab)](https://gitlab.com/MarcusHoltz/party-line-pager)
+[![Source: GitHub](https://img.shields.io/badge/source-GitHub-black?style=for-the-badge&logo=github)](https://github.com/MarcusHoltz/party-line-pager)
 
-# marcusholtz/partylinepager
+# marcusholtz/party-line-pager
 
 Open a room on a chat network, and everyone who subscribed on **any** chat network gets a way into it. Supports Tor, I2P, Reticulum party lines, and WebRTC browser links. Fans credentials to nine chat networks. No database, no accounts, nothing remembered.
 
@@ -12,7 +12,7 @@ Open a room on a chat network, and everyone who subscribed on **any** chat netwo
 
 There is no separate "wizard edition" of this image. 
 
-**The setup wizard** (`partylinepager.sh`) is a script in the [git repo](https://github.com/MarcusHoltz/partylinepager), you can download. 
+**The setup wizard** (`party-line-pager.sh`) is a script in the [git repo](https://github.com/MarcusHoltz/party-line-pager), you can download. 
 
 It runs on your host, writes `.env`, `policy.toml` and `adapters.toml` for you, and then calls `docker compose` to pull and run this exact image.
 
@@ -25,12 +25,12 @@ It runs on your host, writes `.env`, `policy.toml` and `adapters.toml` for you, 
 ## Quick Start: Wizard (recommended)
 
 ```sh
-git clone https://github.com/MarcusHoltz/partylinepager.git && cd partylinepager
-./partylinepager.sh
+git clone https://github.com/MarcusHoltz/party-line-pager.git && cd party-line-pager
+./party-line-pager.sh
 ```
   - Menu walks you through: adapters → policy → which providers
   - Writes config/policy.toml, config/adapters.toml, .env
-  - Sets COMPOSE_FILE to pull marcusholtz/partylinepager:latest (not build)
+  - Sets COMPOSE_FILE to pull marcusholtz/party-line-pager:latest (not build)
   - Runs docker compose up -d for you
   - Same script doubles as admin console after setup (roster, pause/resume, Signal link)
   - To hand-edit the TOML yourself: quit the script first, it owns those files while running
@@ -39,7 +39,7 @@ git clone https://github.com/MarcusHoltz/partylinepager.git && cd partylinepager
 
 For scripted or config-management deployments where you'd rather not clone
 the whole repo. Requires a `policy.toml` and `adapters.toml` already sitting
-in `./config`, written against the [config reference](https://github.com/MarcusHoltz/partylinepager/tree/main/docs/configuration).
+in `./config`, written against the [config reference](https://github.com/MarcusHoltz/party-line-pager/tree/main/docs/configuration).
 
 ### docker-compose
 
@@ -47,31 +47,31 @@ Save as `docker-compose.yml`, then run `docker compose up -d`:
 
 ```yaml
 services:
-  partylinepagerd:
-    image: marcusholtz/partylinepager:latest
-    container_name: partylinepagerd
+  party-line-pagerd:
+    image: marcusholtz/party-line-pager:latest
+    container_name: party-line-pagerd
     restart: unless-stopped
     user: "1000:1000"
     volumes:
-      - ./config:/etc/partylinepager
+      - ./config:/etc/party-line-pager
     environment:
       - RUST_LOG=info
       - TELEGRAM_TOKEN=your-bot-token
-    command: ["--state", "/etc/partylinepager/state"]
+    command: ["--state", "/etc/party-line-pager/state"]
 ```
 
 ### docker cli
 
 ```bash
 docker run -d \
-  --name partylinepagerd \
+  --name party-line-pagerd \
   --restart unless-stopped \
   --user 1000:1000 \
-  -v ./config:/etc/partylinepager \
+  -v ./config:/etc/party-line-pager \
   -e RUST_LOG=info \
   -e TELEGRAM_TOKEN=your-bot-token \
-  marcusholtz/partylinepager:latest \
-  --state /etc/partylinepager/state
+  marcusholtz/party-line-pager:latest \
+  --state /etc/party-line-pager/state
 ```
 
 ### First run
@@ -79,14 +79,14 @@ docker run -d \
 1. `policy.toml` and `adapters.toml` are already in `./config` (see above)
 2. `--user` matches your host uid:gid, or `./config/state` ends up root-owned
 3. Only the adapters you set a token for should be `[enabled = true]` in `adapters.toml`
-4. `docker compose run --rm partylinepagerd --check` validates config before starting anything
+4. `docker compose run --rm party-line-pagerd --check` validates config before starting anything
 5. `docker compose up -d` starts the daemon
 
 No web terminal, no port to publish. Administration is `docker compose exec` only, same as any headless deployment.
 
 ```bash
-docker compose exec partylinepagerd partylinepagerctl who
-docker compose exec partylinepagerd partylinepagerctl approve telegram:123456789
+docker compose exec party-line-pagerd party-line-pagerctl who
+docker compose exec party-line-pagerd party-line-pagerctl approve telegram:123456789
 ```
 
 ## Parameters
@@ -95,8 +95,8 @@ docker compose exec partylinepagerd partylinepagerctl approve telegram:123456789
 
 | Parameter | Function |
 | :---: | --- |
-| `-v /etc/partylinepager` | `policy.toml` and `adapters.toml` (read by the daemon), plus `state/` (roster and room state, auto-created) |
-| `--state /etc/partylinepager/state` | Command argument, not an env var: where state is written inside the mount |
+| `-v /etc/party-line-pager` | `policy.toml` and `adapters.toml` (read by the daemon), plus `state/` (roster and room state, auto-created) |
+| `--state /etc/party-line-pager/state` | Command argument, not an env var: where state is written inside the mount |
 | `-e RUST_LOG=info` | Log verbosity |
 | `--user 1000:1000` | Match your host uid:gid so `./config/state` isn't written as root |
 
@@ -144,13 +144,13 @@ One room at a time. No occupancy tracking, no catch-up, no record of who joined.
 
 ```bash
 # Config check before ever starting the daemon
-docker compose run --rm partylinepagerd --check
+docker compose run --rm party-line-pagerd --check
 
 # Logs: look for "ok" from the check, then normal startup
-docker compose logs partylinepagerd
+docker compose logs party-line-pagerd
 
 # Roster check
-docker compose exec partylinepagerd partylinepagerctl who
+docker compose exec party-line-pagerd party-line-pagerctl who
 ```
 
 ## The Party Line Trifecta
@@ -162,7 +162,7 @@ Three transports, same encryption, same TUI:
 | [![Tor Party Line](https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/header/header--partyline--tor-onion-router-overlay-network.jpg)](https://gitlab.com/MarcusHoltz/tor-party-line) | [![I2P Party Line](https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/header/header--partyline--invisible-internet-project-i2p-garlic-roter.jpg)](https://gitlab.com/MarcusHoltz/i2p-party-line) | [![Reticulum Party Line](https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/header/header--partyline--reticulum-network-stack.jpg)](https://gitlab.com/MarcusHoltz/reticulum-party-line) |
 | [Tor Party Line](https://gitlab.com/MarcusHoltz/tor-party-line) | [I2P Party Line](https://gitlab.com/MarcusHoltz/i2p-party-line) | [Reticulum Party Line](https://gitlab.com/MarcusHoltz/reticulum-party-line) |
 
-PartylinePager orchestrates all three (plus WebRTC) and fans credentials across nine chat networks.
+PartyLinePager orchestrates all three (plus WebRTC) and fans credentials across nine chat networks.
 
 ## License
 

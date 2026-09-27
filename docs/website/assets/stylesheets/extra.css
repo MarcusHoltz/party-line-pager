@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------
- * PartylinePager brand overrides for the Material theme.
+ * PartyLinePager brand overrides for the Material theme.
  *
  * Wired in via `extra_css` in docs/website/mkdocs.yml. `palette` there says
  * primary/accent: custom, so Material pulls these tokens instead of a

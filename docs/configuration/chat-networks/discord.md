@@ -8,7 +8,7 @@ adapters don't need: a **lobby server**.
 ## Why a lobby server
 
 A Discord bot can only DM someone it shares a guild (server)
-with. So enrollment is: subscriber joins a PartylinePager-run
+with. So enrollment is: subscriber joins a PartyLinePager-run
 server once, then DMs the bot `sub`.
 
 ## Setup
@@ -38,7 +38,7 @@ In the [Discord Developer Portal](https://discord.com/developers/applications):
 
 If you don't have a server, create one: the `+` at the bottom
 of your server list > **Create My Own** > name it
-"PartylinePager Lobby".
+"PartyLinePager Lobby".
 
 ### 3. Configure
 
@@ -63,7 +63,7 @@ from an older image needs a rebuild, not just a recreate.
 DM the bot `status`. Check the logs:
 
 ```sh
-docker compose logs partylinepagerd | grep discord
+docker compose logs party-line-pagerd | grep discord
 ```
 
 A working exchange:

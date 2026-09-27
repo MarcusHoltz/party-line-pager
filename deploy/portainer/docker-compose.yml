@@ -1,13 +1,13 @@
-name: partylinepager
+name: party-line-pager
 services:
-  partylinepager:
-    image: marcusholtz/partylinepager-full:latest
-    container_name: partylinepager
+  party-line-pager:
+    image: marcusholtz/party-line-pager-full:latest
+    container_name: party-line-pager
     restart: unless-stopped
     ports:
       - "7681:7681"
     volumes:
-      - partylinepager-config:/config
+      - party-line-pager-config:/config
     environment:
       - PLP_PROVIDERS=tor,web
       - PLP_AUTO_START=0
@@ -19,10 +19,10 @@ services:
       - MATRIX_HOMESERVER=
       - MATRIX_USER=
       - MATRIX_PASSWORD=
-      - MATRIX_STORE_PATH=/var/lib/partylinepager/matrix
+      - MATRIX_STORE_PATH=/var/lib/party-line-pager/matrix
       - IRC_SERVER=
       - IRC_PORT=6697
-      - IRC_NICK=partylinepager
+      - IRC_NICK=party-line-pager
       - IRC_TLS=true
       - IRC_CHANNEL=
       - IRC_ACCOUNT=
@@ -41,4 +41,4 @@ services:
       - EMAIL_IMAP_HOST=
       - EMAIL_FROM=
 volumes:
-  partylinepager-config:
+  party-line-pager-config:

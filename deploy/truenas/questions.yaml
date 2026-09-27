@@ -1,17 +1,17 @@
 groups:
-  - name: PartylinePager Configuration
-    description: Configure PartylinePager
+  - name: PartyLinePager Configuration
+    description: Configure PartyLinePager
   - name: Network Configuration
-    description: Configure network for PartylinePager
+    description: Configure network for PartyLinePager
   - name: Storage Configuration
-    description: Configure storage for PartylinePager
+    description: Configure storage for PartyLinePager
   - name: Resources Configuration
-    description: Configure resources for PartylinePager
+    description: Configure resources for PartyLinePager
 
 questions:
-  - variable: partylinepager
+  - variable: party_line_pager
     label: ""
-    group: PartylinePager Configuration
+    group: PartyLinePager Configuration
     schema:
       type: dict
       attrs:

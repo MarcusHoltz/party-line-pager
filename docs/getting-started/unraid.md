@@ -17,17 +17,17 @@ The full, single image, version uses about **1.1 GB** of space.
 ## Build
 
 ```sh
-docker build -f deploy/Dockerfile.full -t partylinepager-full .
+docker build -f deploy/Dockerfile.full -t party-line-pager-full .
 ```
 
 ## Quick start
 
 ```sh
-docker run -d --name partylinepager \
+docker run -d --name party-line-pager \
   -p 7681:7681 \
   -v ./config:/config \
   -e TTYD_CREDENTIAL=admin:changeme \
-  partylinepager-full
+  party-line-pager-full
 ```
 
 Open `http://<your-server>:7681` in a browser. The wizard walks
@@ -45,11 +45,11 @@ are written to the `/config` volume.
 ### 1. Wizard mode (first-time setup)
 
 ```sh
-docker run -d --name partylinepager \
+docker run -d --name party-line-pager \
   -p 7681:7681 \
   -v ./config:/config \
   -e TTYD_CREDENTIAL=admin:changeme \
-  partylinepager-full
+  party-line-pager-full
 ```
 
 Browser terminal at `http://<host>:7681`. The wizard writes
@@ -58,14 +58,14 @@ config files. No daemon runs until you tell it to start.
 ### 2. Wizard + daemon (admin terminal with daemon running)
 
 ```sh
-docker run -d --name partylinepager \
+docker run -d --name party-line-pager \
   -p 7681:7681 \
   -v ./config:/config \
   -e PLP_AUTO_START=1 \
   -e TTYD_CREDENTIAL=admin:changeme \
   -e TELEGRAM_TOKEN="your-bot-token" \
   -e PLP_PROVIDERS="tor,i2p,rns,web" \
-  partylinepager-full
+  party-line-pager-full
 ```
 
 The daemon starts in the background on boot, then ttyd opens
@@ -75,21 +75,21 @@ running instance.
 ### 3. Headless (daemon only, no browser terminal)
 
 ```sh
-docker run -d --name partylinepager \
+docker run -d --name party-line-pager \
   -v ./config:/config \
   -e PLP_HEADLESS=1 \
   -e TELEGRAM_TOKEN="your-bot-token" \
   -e PLP_PROVIDERS="tor,i2p,rns,web" \
-  partylinepager-full
+  party-line-pager-full
 ```
 
 No ttyd, no wizard, no port 7681. The daemon runs as PID 1.
 Administration is `docker exec` only:
 
 ```sh
-docker exec partylinepager partylinepagerctl \
+docker exec party-line-pager party-line-pagerctl \
   --state /config/state roster
-docker exec partylinepager partylinepagerctl \
+docker exec party-line-pager party-line-pagerctl \
   --state /config/state pause
 ```
 
@@ -98,28 +98,28 @@ docker exec partylinepager partylinepagerctl \
 **Telegram only, web rooms, browser admin:**
 
 ```sh
-docker run -d --name partylinepager \
+docker run -d --name party-line-pager \
   -p 7681:7681 \
   -v ./config:/config \
   -e PLP_AUTO_START=1 \
   -e TTYD_CREDENTIAL=admin:changeme \
   -e TELEGRAM_TOKEN="your-bot-token" \
   -e PLP_PROVIDERS="web" \
-  partylinepager-full
+  party-line-pager-full
 ```
 
 **Telegram + Signal + IRC, all party lines, headless:**
 
 ```sh
-docker run -d --name partylinepager \
+docker run -d --name party-line-pager \
   -v ./config:/config \
   -e PLP_HEADLESS=1 \
   -e TELEGRAM_TOKEN="your-bot-token" \
   -e SIGNAL_NUMBER="+15555550100" \
   -e IRC_SERVER="irc.libera.chat" \
-  -e IRC_NICK="partylinepager" \
+  -e IRC_NICK="party-line-pager" \
   -e PLP_PROVIDERS="tor,i2p,rns,web" \
-  partylinepager-full
+  party-line-pager-full
 ```
 
 **Quick foreground test** (removed on exit, no volume):
@@ -128,24 +128,24 @@ docker run -d --name partylinepager \
 docker run --rm --name plp-test \
   -e PLP_HEADLESS=1 \
   -e TELEGRAM_TOKEN="your-bot-token" \
-  partylinepager-full
+  party-line-pager-full
 ```
 
 ## Verifying a deployment
 
 ```sh
-# Logs: look for "partylinepagerd is up" and
+# Logs: look for "party-line-pagerd is up" and
 # "Listening on port: 7681"
-docker logs partylinepager
+docker logs party-line-pager
 
-# Processes: tini, ttyd (if not headless), partylinepagerd
-docker exec partylinepager ps aux
+# Processes: tini, ttyd (if not headless), party-line-pagerd
+docker exec party-line-pager ps aux
 
 # Web UI (wizard/auto-start modes only):
 curl -u admin:changeme http://localhost:7681/
 
 # Daemon responding:
-docker exec partylinepager partylinepagerctl \
+docker exec party-line-pager party-line-pagerctl \
   --state /config/state roster
 ```
 
@@ -198,7 +198,7 @@ Env vars take precedence over wizard-written config.
 | `MATRIX_HOMESERVER` | (none) | Enables `[matrix]` adapter |
 | `MATRIX_USER` | (none) | Bot's localpart (not full MXID) |
 | `MATRIX_PASSWORD` | (none) | Bot account password |
-| `MATRIX_STORE_PATH` | `/var/lib/partylinepager/matrix` | E2EE key store |
+| `MATRIX_STORE_PATH` | `/var/lib/party-line-pager/matrix` | E2EE key store |
 
 ### IRC
 
@@ -206,7 +206,7 @@ Env vars take precedence over wizard-written config.
 |---|---|---|
 | `IRC_SERVER` | (none) | Enables `[irc]` adapter |
 | `IRC_PORT` | `6697` | Server port |
-| `IRC_NICK` | `partylinepager` | Bot's nickname |
+| `IRC_NICK` | `party-line-pager` | Bot's nickname |
 | `IRC_TLS` | `true` | TLS for the connection |
 | `IRC_CHANNEL` | (none) | Channel to idle in (for discoverability) |
 | `IRC_ACCOUNT` | (none) | Services account, if different from nick |
@@ -270,8 +270,8 @@ Env vars take precedence over wizard-written config.
 
 | Component | Path | Purpose |
 |---|---|---|
-| partylinepagerd | `/usr/local/bin/` | The daemon |
-| partylinepagerctl | `/usr/local/bin/` | CLI admin tool |
+| party-line-pagerd | `/usr/local/bin/` | The daemon |
+| party-line-pagerctl | `/usr/local/bin/` | CLI admin tool |
 | yopass | `/usr/local/bin/` | Link-mode credential delivery |
 | mkp224o | `/usr/local/bin/` | Vanity .onion address generator |
 | ttyd | `/usr/local/bin/` | Browser terminal for the wizard |

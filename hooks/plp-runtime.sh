@@ -1,9 +1,9 @@
 #!/bin/sh
-# plp-runtime.sh - Transport lifecycle shim for PartylinePager.
+# plp-runtime.sh - Transport lifecycle shim for PartyLinePager.
 #
 # Abstracts how hooks manage transport processes. Two modes:
-#   PARTYLINEPAGER_RUNTIME=compose  (default) - passthrough to docker compose
-#   PARTYLINEPAGER_RUNTIME=direct   - local process management via PID files
+#   PARTY_LINE_PAGER_RUNTIME=compose  (default) - passthrough to docker compose
+#   PARTY_LINE_PAGER_RUNTIME=direct   - local process management via PID files
 #
 # Usage:
 #   plp-runtime up    <dir> <service>
@@ -17,7 +17,7 @@
 
 set -eu
 
-RUNTIME="${PARTYLINEPAGER_RUNTIME:-compose}"
+RUNTIME="${PARTY_LINE_PAGER_RUNTIME:-compose}"
 PID_DIR="${PLP_PID_DIR:-/var/run/plp}"
 
 _log() { echo "plp-runtime[$RUNTIME]: $*" >&2; }
@@ -242,7 +242,7 @@ case "$RUNTIME" in
         esac
         ;;
     *)
-        _log "unknown PARTYLINEPAGER_RUNTIME: $RUNTIME"
+        _log "unknown PARTY_LINE_PAGER_RUNTIME: $RUNTIME"
         exit 1
         ;;
 esac

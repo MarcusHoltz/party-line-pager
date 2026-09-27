@@ -1,11 +1,11 @@
 #!/bin/bash
-# PartylinePager full image entrypoint.
+# PartyLinePager full image entrypoint.
 #
 # Startup order:
 #   1. Create config dir, copy examples on first run
 #   2. Generate config from env vars (env takes precedence)
 #   3. Tor directory permissions
-#   4. If PLP_HEADLESS=1 and config exists: exec partylinepagerd (no wizard)
+#   4. If PLP_HEADLESS=1 and config exists: exec party-line-pagerd (no wizard)
 #   5. If PLP_AUTO_START=1 and config exists: start daemon in background
 #   6. exec ttyd with the wizard as the browser terminal
 set -euo pipefail
@@ -29,8 +29,8 @@ mkdir -p "$CONFIG_DIR" "$STATE_DIR"
 
 if [ ! -f "$POLICY_FILE" ]; then
     log "First run: copying example configs to $CONFIG_DIR"
-    cp /opt/partylinepager/policy.example.toml "$POLICY_FILE"
-    cp /opt/partylinepager/adapters.example.toml "$ADAPTERS_FILE"
+    cp /opt/party-line-pager/policy.example.toml "$POLICY_FILE"
+    cp /opt/party-line-pager/adapters.example.toml "$ADAPTERS_FILE"
 fi
 
 # ── 2. Env var config generation ─────────────────────────────────────
@@ -73,7 +73,7 @@ enabled = true
 homeserver = "$MATRIX_HOMESERVER"
 user = "${MATRIX_USER:-}"
 password = "${MATRIX_PASSWORD:-}"
-store_path = "${MATRIX_STORE_PATH:-/var/lib/partylinepager/matrix}"
+store_path = "${MATRIX_STORE_PATH:-/var/lib/party-line-pager/matrix}"
 TOML
     fi
 
@@ -83,7 +83,7 @@ TOML
 enabled = true
 server = "$IRC_SERVER"
 port = ${IRC_PORT:-6697}
-nick = "${IRC_NICK:-partylinepager}"
+nick = "${IRC_NICK:-party-line-pager}"
 tls = ${IRC_TLS:-true}
 channels = ["${IRC_CHANNEL:-}"]
 TOML
@@ -170,32 +170,32 @@ if [ -n "$PLP_PROVIDERS" ]; then
                 cat >> "$_tmp" <<TOML
 
 [provider.tor]
-up = "/opt/partylinepager/hooks/provider-tor.sh"
-down = "/opt/partylinepager/hooks/teardown-tor.sh"
+up = "/opt/party-line-pager/hooks/provider-tor.sh"
+down = "/opt/party-line-pager/hooks/teardown-tor.sh"
 TOML
                 ;;
             i2p)
                 cat >> "$_tmp" <<TOML
 
 [provider.i2p]
-up = "/opt/partylinepager/hooks/provider-i2p.sh"
-down = "/opt/partylinepager/hooks/teardown-i2p.sh"
+up = "/opt/party-line-pager/hooks/provider-i2p.sh"
+down = "/opt/party-line-pager/hooks/teardown-i2p.sh"
 TOML
                 ;;
             rns)
                 cat >> "$_tmp" <<TOML
 
 [provider.rns]
-up = "/opt/partylinepager/hooks/provider-rns.sh"
-down = "/opt/partylinepager/hooks/teardown-rns.sh"
+up = "/opt/party-line-pager/hooks/provider-rns.sh"
+down = "/opt/party-line-pager/hooks/teardown-rns.sh"
 TOML
                 ;;
             web)
                 cat >> "$_tmp" <<TOML
 
 [provider.web]
-up = "/opt/partylinepager/hooks/provider-web.sh"
-down = "/opt/partylinepager/hooks/teardown-web.sh"
+up = "/opt/party-line-pager/hooks/provider-web.sh"
+down = "/opt/party-line-pager/hooks/teardown-web.sh"
 base_url = "${PLP_WEB_BASE_URL:-https://p2p.mirotalk.com}"
 path = "${PLP_WEB_PATH:-join}"
 TOML
@@ -242,8 +242,8 @@ fi
 
 # ── 4. Headless mode ─────────────────────────────────────────────────
 if [ "$PLP_HEADLESS" = "1" ] && [ -f "$ADAPTERS_FILE" ]; then
-    log "Headless mode: starting partylinepagerd as PID 1"
-    exec /usr/local/bin/partylinepagerd \
+    log "Headless mode: starting party-line-pagerd as PID 1"
+    exec /usr/local/bin/party-line-pagerd \
         --policy "$POLICY_FILE" \
         --adapters "$ADAPTERS_FILE" \
         --state "$STATE_DIR"
@@ -251,12 +251,12 @@ fi
 
 # ── 5. Auto-start daemon in background ──────────────────────────────
 if [ "$PLP_AUTO_START" = "1" ] && [ -f "$ADAPTERS_FILE" ]; then
-    log "Auto-start: launching partylinepagerd in background"
-    /usr/local/bin/partylinepagerd \
+    log "Auto-start: launching party-line-pagerd in background"
+    /usr/local/bin/party-line-pagerd \
         --policy "$POLICY_FILE" \
         --adapters "$ADAPTERS_FILE" \
         --state "$STATE_DIR" &
-    log "partylinepagerd started (pid $!)"
+    log "party-line-pagerd started (pid $!)"
 fi
 
 # ── 6. Launch ttyd with the wizard ───────────────────────────────────
@@ -264,7 +264,7 @@ ttyd_args=(
     --writable
     --port "$TTYD_INTERNAL_PORT"
     --interface 127.0.0.1
-    --client-option titleFixed="PartylinePager"
+    --client-option titleFixed="PartyLinePager"
     --client-option disableLeaveAlert=true
     --client-option rendererType=canvas
 )
@@ -294,7 +294,7 @@ fi
 
 log "Browser terminal: http://<this-server>:$TTYD_PORT"
 
-MATRIX_STORE_DIR="${MATRIX_STORE_PATH:-/var/lib/partylinepager/matrix}"
+MATRIX_STORE_DIR="${MATRIX_STORE_PATH:-/var/lib/party-line-pager/matrix}"
 ENV_FILE="$CONFIG_DIR/.env"
 export CONFIG_DIR STATE_DIR POLICY_FILE ADAPTERS_FILE MATRIX_STORE_DIR ENV_FILE
-exec ttyd "${ttyd_args[@]}" bash /opt/partylinepager/partylinepager.sh
+exec ttyd "${ttyd_args[@]}" bash /opt/party-line-pager/party-line-pager.sh

@@ -1,5 +1,5 @@
 #!/bin/sh
-# PartylinePager provider hook: mint a MiroTalk-style room URL.
+# PartyLinePager provider hook: mint a MiroTalk-style room URL.
 #
 # There is nothing to provision. A room on a web meeting instance (MiroTalk,
 # Jitsi, or any self-hosted alternative) exists because somebody opened its
@@ -7,19 +7,19 @@
 # configured base URL, under the configured path. That is also the entire
 # access control: whoever has the link is in, there is no second secret.
 #
-# Contract with partylinepagerd:
+# Contract with party-line-pagerd:
 #   stdin  nothing. This provider has no secret. Stdin is closed immediately,
 #          so the drain below returns at once.
-#   env    PARTYLINEPAGER_WEB_BASE_URL    the instance to mint on, from policy.toml
-#          PARTYLINEPAGER_WEB_PATH        segment(s) between base_url and the slug,
+#   env    PARTY_LINE_PAGER_WEB_BASE_URL    the instance to mint on, from policy.toml
+#          PARTY_LINE_PAGER_WEB_PATH        segment(s) between base_url and the slug,
 #                                    from provider.web.path. May be empty.
-#          PARTYLINEPAGER_WEB_STATIC_SLUG when non-empty, use this exact slug
+#          PARTY_LINE_PAGER_WEB_STATIC_SLUG when non-empty, use this exact slug
 #                                    instead of generating a random one, from
 #                                    provider.web.static_slug. Lets an admin
 #                                    hand out one reusable room URL instead of
 #                                    a fresh crypto-random one every room.
-#          PARTYLINEPAGER_TTL_SECS        how long the room is meant to live
-#          PARTYLINEPAGER_NOTE            the host's one-line note, may be empty
+#          PARTY_LINE_PAGER_TTL_SECS        how long the room is meant to live
+#          PARTY_LINE_PAGER_NOTE            the host's one-line note, may be empty
 #   stdout exactly one JSON object: {"url":"..."}
 #          Anything else printed on stdout is ignored as long as the JSON object
 #          is the last line starting with '{'. Log to stderr freely.
@@ -34,9 +34,9 @@ set -eu
 
 log() { echo "provider-web: $*" >&2; }
 
-BASE_URL="${PARTYLINEPAGER_WEB_BASE_URL:?PARTYLINEPAGER_WEB_BASE_URL is required, set base_url under [provider.web]}"
-WEB_PATH="${PARTYLINEPAGER_WEB_PATH:-}"
-STATIC_SLUG="${PARTYLINEPAGER_WEB_STATIC_SLUG:-}"
+BASE_URL="${PARTY_LINE_PAGER_WEB_BASE_URL:?PARTY_LINE_PAGER_WEB_BASE_URL is required, set base_url under [provider.web]}"
+WEB_PATH="${PARTY_LINE_PAGER_WEB_PATH:-}"
+STATIC_SLUG="${PARTY_LINE_PAGER_WEB_STATIC_SLUG:-}"
 
 # This provider takes no secret, but drain stdin anyway so the contract is the
 # same shape as every other hook's.
@@ -60,5 +60,5 @@ fi
 WEB_PATH="${WEB_PATH#/}"
 WEB_PATH="${WEB_PATH%/}"
 
-log "minting a room on ${BASE_URL%/}${WEB_PATH:+/$WEB_PATH} (static=${STATIC_SLUG:+yes} ttl ${PARTYLINEPAGER_TTL_SECS:-unset}s)"
+log "minting a room on ${BASE_URL%/}${WEB_PATH:+/$WEB_PATH} (static=${STATIC_SLUG:+yes} ttl ${PARTY_LINE_PAGER_TTL_SECS:-unset}s)"
 printf '{"url":"%s/%s%s"}\n' "${BASE_URL%/}" "${WEB_PATH:+$WEB_PATH/}" "$SLUG"

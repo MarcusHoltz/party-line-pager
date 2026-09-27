@@ -37,7 +37,7 @@ docker compose up -d
 # the number via its REST API or QR code flow
 ```
 
-The `partylinepager.sh` wizard (menu item 5) handles Signal
+The `party-line-pager.sh` wizard (menu item 5) handles Signal
 linking interactively.
 
 ### Full image
@@ -48,12 +48,12 @@ entrypoint starts signal-cli-rest-api in the background in
 `MODE=native`. No separate container needed.
 
 ```sh
-docker run -d --name partylinepager \
+docker run -d --name party-line-pager \
   -v ./config:/config \
   -e SIGNAL_NUMBER="+15555550100" \
   -e PLP_AUTO_START=1 \
   -e TTYD_CREDENTIAL=admin:changeme \
-  partylinepager-full
+  party-line-pager-full
 ```
 
 Signal data is stored in `$CONFIG_DIR/signal-cli/`. This

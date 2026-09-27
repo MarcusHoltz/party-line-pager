@@ -11,7 +11,7 @@ put underneath a security policy file.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `name` | `PartylinePager` | Shown in broadcasts and `help`. |
+| `name` | `PartyLinePager` | Shown in broadcasts and `help`. |
 | `signups` | `approval` | `open`, `approval`, or `closed`. |
 | `default_tier` | required | Tier for a new subscriber. Must name an existing `[[tier]]`. |
 | `room_ttl` | `2h` | Wall clock, not an idle timer. |
@@ -27,7 +27,7 @@ put underneath a security policy file.
   roster immediately. Correct for a public hangout, wrong for
   anything else.
 - **`approval`**: requests wait for
-  `partylinepagerctl approve`. The default.
+  `party-line-pagerctl approve`. The default.
 - **`closed`**: nobody new gets in.
 
 ### Link mode
@@ -87,16 +87,16 @@ All three party lines take the same two keys:
 
 ```toml
 [provider.tor]
-up   = "/opt/partylinepager/hooks/provider-tor.sh"
-down = "/opt/partylinepager/hooks/teardown-tor.sh"
+up   = "/opt/party-line-pager/hooks/provider-tor.sh"
+down = "/opt/party-line-pager/hooks/teardown-tor.sh"
 
 [provider.i2p]
-up   = "/opt/partylinepager/hooks/provider-i2p.sh"
-down = "/opt/partylinepager/hooks/teardown-i2p.sh"
+up   = "/opt/party-line-pager/hooks/provider-i2p.sh"
+down = "/opt/party-line-pager/hooks/teardown-i2p.sh"
 
 [provider.rns]
-up   = "/opt/partylinepager/hooks/provider-rns.sh"
-down = "/opt/partylinepager/hooks/teardown-rns.sh"
+up   = "/opt/party-line-pager/hooks/provider-rns.sh"
+down = "/opt/party-line-pager/hooks/teardown-rns.sh"
 ```
 
 ### `[provider.web]`
@@ -111,8 +111,8 @@ down = "/opt/partylinepager/hooks/teardown-rns.sh"
 
 ```toml
 [provider.web]
-up       = "/opt/partylinepager/hooks/provider-web.sh"
-down     = "/opt/partylinepager/hooks/teardown-web.sh"
+up       = "/opt/party-line-pager/hooks/provider-web.sh"
+down     = "/opt/party-line-pager/hooks/teardown-web.sh"
 base_url = "https://p2p.mirotalk.com"
 path     = "join"
 # static_slug = "movie-night"
@@ -144,7 +144,7 @@ standing invite to anyone who has ever seen it.
 | `may_receive` | `true` | `false` makes it write-only. |
 | `window` | `0s` | Rolling quota period. `0s` is unlimited. |
 | `max_rooms` | `1` | Rooms allowed inside one `window`. Ignored when `window` is `0s`. |
-| `hold_for_approval` | `false` | Park requests for `partylinepagerctl approve-request`. |
+| `hold_for_approval` | `false` | Park requests for `party-line-pagerctl approve-request`. |
 | `may_close` | `true` | `false` stops the tier from using `close`. |
 
 Quotas are **rolling**, not calendar-aligned: "max_rooms since
@@ -170,11 +170,11 @@ stranger and an open room:
 
 **Gate 1: subscription approval.** `signups = "approval"` means
 `sub` lands in `pending`. Nothing reaches them until
-`partylinepagerctl approve <endpoint>`.
+`party-line-pagerctl approve <endpoint>`.
 
 **Gate 2: room-open approval.** The default tier (`weekly`)
 sets `hold_for_approval = true`, so even after approval, every
-room is parked until `partylinepagerctl approve-request <id>`.
+room is parked until `party-line-pagerctl approve-request <id>`.
 
 ```toml
 [instance]
@@ -206,12 +206,12 @@ window = "24h"
 Apply:
 
 ```sh
-docker compose restart partylinepagerd
+docker compose restart party-line-pagerd
 # or from the wizard: Policy menu, items 1 and 2
 ```
 
 Verify:
 
 ```sh
-docker compose run --rm partylinepagerd --check
+docker compose run --rm party-line-pagerd --check
 ```

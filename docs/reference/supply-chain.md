@@ -37,7 +37,7 @@ are the baseline; it says nothing about what's already locked.
 
 ## Scripts
 
-Three scripts, available from the `partylinepager.sh`
+Three scripts, available from the `party-line-pager.sh`
 Maintenance menu (items 5, 6, 7) or standalone:
 
 ```

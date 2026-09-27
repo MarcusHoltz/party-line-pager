@@ -10,7 +10,7 @@ If a room is open, close it before upgrading. The teardown hook
 needs the running daemon to clean up the provider container.
 
 ```sh
-partylinepagerctl close
+party-line-pagerctl close
 ```
 
 Or wait for the room to expire on its own (check `room_ttl` in
@@ -38,7 +38,7 @@ catches missing keys, bad types, and provider sections that
 reference hooks the image does not contain.
 
 ```sh
-docker compose run --rm partylinepagerd --check
+docker compose run --rm party-line-pagerd --check
 ```
 
 Fix anything it reports before continuing.
@@ -65,7 +65,7 @@ docker compose -f docker-compose.yml \
 ## 5. Verify
 
 ```sh
-docker compose exec partylinepagerd partylinepagerctl status
+docker compose exec party-line-pagerd party-line-pagerctl status
 ```
 
 Confirm the daemon is running, no rooms are stuck, and your

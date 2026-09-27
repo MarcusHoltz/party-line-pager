@@ -19,7 +19,7 @@
 # grant happens once here; each party line overlay adds only its own checkout.
 
 services:
-  partylinepagerd:
+  party-line-pagerd:
     # The party line hooks drive `docker compose`, which needs the docker group
     # rather than root. See .env.example for DOCKER_GID.
     group_add:

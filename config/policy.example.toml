@@ -1,15 +1,15 @@
-# PartylinePager policy.
+# PartyLinePager policy.
 #
 # Admin-owned and read-only to the daemon. Safe to keep in version control:
 # there are no secrets here (those live in adapters.toml). The daemon re-reads
-# this file only at startup, so restart partylinepagerd after editing it.
+# this file only at startup, so restart party-line-pagerd after editing it.
 
 [instance]
 # Shown in broadcasts and in `help`.
-name = "PartylinePager"
+name = "PartyLinePager"
 
 # open     anyone who messages the bot is subscribed immediately
-# approval requests wait for `partylinepagerctl approve`
+# approval requests wait for `party-line-pagerctl approve`
 # closed   nobody new gets in
 #
 # With `open`, anybody who finds the bot receives the room address and the
@@ -30,7 +30,7 @@ room_ttl = "2h"
 # for I2P, immediate for Reticulum and web. Keep this generous.
 hook_timeout = "300s"
 
-# Boot default for the kill switch. `partylinepagerctl pause` flips it at runtime
+# Boot default for the kill switch. `party-line-pagerctl pause` flips it at runtime
 # without a restart.
 paused = false
 
@@ -84,20 +84,20 @@ concurrency = 8
 # than after a failed call.
 
 [provider.tor]
-up = "/opt/partylinepager/hooks/provider-tor.sh"
-down = "/opt/partylinepager/hooks/teardown-tor.sh"
+up = "/opt/party-line-pager/hooks/provider-tor.sh"
+down = "/opt/party-line-pager/hooks/teardown-tor.sh"
 
 [provider.i2p]
-up = "/opt/partylinepager/hooks/provider-i2p.sh"
-down = "/opt/partylinepager/hooks/teardown-i2p.sh"
+up = "/opt/party-line-pager/hooks/provider-i2p.sh"
+down = "/opt/party-line-pager/hooks/teardown-i2p.sh"
 
 [provider.rns]
-up = "/opt/partylinepager/hooks/provider-rns.sh"
-down = "/opt/partylinepager/hooks/teardown-rns.sh"
+up = "/opt/party-line-pager/hooks/provider-rns.sh"
+down = "/opt/party-line-pager/hooks/teardown-rns.sh"
 
 [provider.web]
-up = "/opt/partylinepager/hooks/provider-web.sh"
-down = "/opt/partylinepager/hooks/teardown-web.sh"
+up = "/opt/party-line-pager/hooks/provider-web.sh"
+down = "/opt/party-line-pager/hooks/teardown-web.sh"
 # The instance rooms are minted on: your own MiroTalk, Jitsi, or any other
 # self-hosted alternative. This default is the public MiroTalk instance, which
 # means the room list, the TURN servers and the logs are somebody else's.
@@ -125,7 +125,7 @@ path = "join"
 #                     Monday at 00:00.
 #   max_rooms        how many rooms fit inside one window before it is
 #                     exhausted. Default 1. Ignored when window is "0s".
-#   hold_for_approval park the request until `partylinepagerctl approve-request`
+#   hold_for_approval park the request until `party-line-pagerctl approve-request`
 #   may_close         false stops this tier from closing a room it opened early
 
 [[tier]]

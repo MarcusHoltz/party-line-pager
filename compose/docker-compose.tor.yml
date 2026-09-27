@@ -17,7 +17,7 @@
 #   git clone https://gitlab.com/MarcusHoltz/tor-party-line.git party-lines/tor-party-line
 
 services:
-  partylinepagerd:
+  party-line-pagerd:
     environment:
       # Where the provider hooks find the tor-party-line directory, as seen
       # from inside this container. Defaults to the PLP-owned transport

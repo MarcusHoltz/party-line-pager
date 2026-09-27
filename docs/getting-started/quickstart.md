@@ -10,8 +10,8 @@ Nothing starts that you didn't set in the wizard.
 ## 1. Clone and configure
 
 ```sh
-git clone <this repo> partylinepager && cd partylinepager
-./partylinepager.sh
+git clone <this repo> party-line-pager && cd party-line-pager
+./party-line-pager.sh
 ```
 
 A menu comes up. Work down it, and it writes
@@ -24,8 +24,8 @@ then a **20+ minute first build** you can walk away from.
 ## 2. The wizard
 
 The same script is the admin console afterwards, so
-`./partylinepager.sh` is the only command worth memorizing.
-Everything it does is a `docker compose` or `partylinepagerctl`
+`./party-line-pager.sh` is the only command worth memorizing.
+Everything it does is a `docker compose` or `party-line-pagerctl`
 invocation documented in the reference; the script only saves
 the typing.
 
@@ -54,17 +54,17 @@ original path.
 Check the configuration without starting anything:
 
 ```sh
-docker compose run --rm partylinepagerd --check
+docker compose run --rm party-line-pagerd --check
 ```
 
 ```
-policy:   /etc/partylinepager/policy.toml (4 tiers)
-state:    /etc/partylinepager/state
+policy:   /etc/party-line-pager/policy.toml (4 tiers)
+state:    /etc/party-line-pager/state
 adapters: telegram
-command tor:  /opt/partylinepager/hooks/provider-tor.sh
-          teardown /opt/partylinepager/hooks/teardown-tor.sh
-command web:  /opt/partylinepager/hooks/provider-web.sh
-          teardown /opt/partylinepager/hooks/teardown-web.sh
+command tor:  /opt/party-line-pager/hooks/provider-tor.sh
+          teardown /opt/party-line-pager/hooks/teardown-tor.sh
+command web:  /opt/party-line-pager/hooks/provider-web.sh
+          teardown /opt/party-line-pager/hooks/teardown-web.sh
 ok
 ```
 
@@ -72,16 +72,16 @@ ok
 
 ```sh
 docker compose up -d
-docker compose logs -f partylinepagerd
+docker compose logs -f party-line-pagerd
 ```
 
 Then message the bot `sub` on whichever network you configured,
 approve yourself, and open a room:
 
 ```sh
-docker compose exec partylinepagerd partylinepagerctl who
-docker compose exec partylinepagerd \
-  partylinepagerctl approve telegram:123456789
+docker compose exec party-line-pagerd party-line-pagerctl who
+docker compose exec party-line-pagerd \
+  party-line-pagerctl approve telegram:123456789
 ```
 
 ## First build performance

@@ -35,7 +35,7 @@ watch memory usage.
 
 **Host gets "warming the line" and nothing else**
 : The provider hook failed or timed out.
-`docker compose logs partylinepagerd` carries the hook's stderr.
+`docker compose logs party-line-pagerd` carries the hook's stderr.
 Common causes: checkout dir wrong inside the container, Docker
 socket not mounted, Tor needing longer than
 `BOOTSTRAP_TIMEOUT`, or a transport compose file missing
@@ -57,11 +57,11 @@ custom hook emitted an invalid path.
 
   ```sh
   docker compose run --rm \
-    --entrypoint /opt/partylinepager/hooks/provider-web.sh \
-    -e PARTYLINEPAGER_WEB_BASE_URL=https://your.host \
-    -e PARTYLINEPAGER_WEB_PATH=join \
-    -e PARTYLINEPAGER_WEB_STATIC_SLUG= \
-    partylinepagerd
+    --entrypoint /opt/party-line-pager/hooks/provider-web.sh \
+    -e PARTY_LINE_PAGER_WEB_BASE_URL=https://your.host \
+    -e PARTY_LINE_PAGER_WEB_PATH=join \
+    -e PARTY_LINE_PAGER_WEB_STATIC_SLUG= \
+    party-line-pagerd
   ```
 
 **Web room link still works after it closed**
@@ -71,7 +71,7 @@ it cannot end a call hosted on someone else's server.
 ## Subscribers
 
 **Nobody received the broadcast**
-: `partylinepagerctl who` and check for `active`. Pending
+: `party-line-pagerctl who` and check for `active`. Pending
 subscribers receive nothing. So do subscribers inside their
 quiet window, silently and by design.
 

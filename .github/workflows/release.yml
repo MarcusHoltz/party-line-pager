@@ -45,10 +45,10 @@
 #
 # Two images, built in parallel via matrix:
 #
-#   partylinepager        V2 modular image (docker-compose deployment)
+#   party-line-pager        V2 modular image (docker-compose deployment)
 #                         Built from: ./Dockerfile
 #
-#   partylinepager-full   V1 all-in-one image (single container)
+#   party-line-pager-full   V1 all-in-one image (single container)
 #                         Built from: deploy/Dockerfile.full
 #
 # Both get tagged with :latest and :<version> on each registry.
@@ -116,7 +116,7 @@ on:
       #   default: ""
 
 env:
-  COMPOSE_PROJECT_NAME: partylinepager
+  COMPOSE_PROJECT_NAME: party-line-pager
   # Registry namespaces (auto-adapt to forks).
   # Override DH_NS if your Docker Hub username differs from GitHub.
   DH_NS: ${{ github.repository_owner }}
@@ -269,10 +269,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - image: partylinepager-full
+          - image: party-line-pager-full
             file: deploy/Dockerfile.full
             scope: full
-          - image: partylinepager
+          - image: party-line-pager
             file: Dockerfile
             scope: compose
     steps:

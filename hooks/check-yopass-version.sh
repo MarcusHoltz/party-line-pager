@@ -1,7 +1,7 @@
 #!/bin/sh
 # Reports whether the yopass CLI pinned in the Dockerfile is behind upstream.
 #
-# Not part of any hook contract partylinepagerd calls: there is no CI in this repo
+# Not part of any hook contract party-line-pagerd calls: there is no CI in this repo
 # to wire it into yet, so this is a standalone check an admin runs by hand
 # (or points a cron/CI job at later). It never touches the image; bumping the
 # pin in the Dockerfile is a manual edit, on purpose, so a yopass release

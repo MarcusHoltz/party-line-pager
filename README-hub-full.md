@@ -1,10 +1,10 @@
-[![PartylinePager](https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/posts/party-line-pager--tor-i2p-rns-call-pager.svg)](https://gitlab.com/MarcusHoltz/partylinepager)
+[![PartyLinePager](https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/posts/party-line-pager--tor-i2p-rns-call-pager.svg)](https://gitlab.com/MarcusHoltz/party-line-pager)
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](https://gitlab.com/MarcusHoltz/partylinepager/-/blob/main/LICENSE)
-[![Source: GitLab](https://img.shields.io/badge/source-GitLab-orange?style=for-the-badge&logo=gitlab)](https://gitlab.com/MarcusHoltz/partylinepager)
-[![Source: GitHub](https://img.shields.io/badge/source-GitHub-black?style=for-the-badge&logo=github)](https://github.com/MarcusHoltz/partylinepager)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](https://gitlab.com/MarcusHoltz/party-line-pager/-/blob/main/LICENSE)
+[![Source: GitLab](https://img.shields.io/badge/source-GitLab-orange?style=for-the-badge&logo=gitlab)](https://gitlab.com/MarcusHoltz/party-line-pager)
+[![Source: GitHub](https://img.shields.io/badge/source-GitHub-black?style=for-the-badge&logo=github)](https://github.com/MarcusHoltz/party-line-pager)
 
-# marcusholtz/partylinepager-full
+# marcusholtz/party-line-pager-full
 
 Open a room on a chat network, and everyone who subscribed on **any** chat network gets a way into it. Supports Tor, I2P, Reticulum party lines, and WebRTC browser links. Fans credentials to nine chat networks. No database, no accounts, nothing remembered.
 
@@ -24,9 +24,9 @@ Save as `docker-compose.yml`, then run `docker compose up -d`:
 
 ```yaml
 services:
-  partylinepager:
-    image: marcusholtz/partylinepager-full:latest
-    container_name: partylinepager
+  party-line-pager:
+    image: marcusholtz/party-line-pager-full:latest
+    container_name: party-line-pager
     restart: unless-stopped
     ports:
       - "7681:7681"
@@ -42,12 +42,12 @@ Open `http://<host>:7681` and follow the wizard.
 
 ```bash
 docker run -d \
-  --name partylinepager \
+  --name party-line-pager \
   --restart unless-stopped \
   -p 7681:7681 \
   -v ./config:/config \
   -e TTYD_CREDENTIAL=admin:changeme \
-  marcusholtz/partylinepager-full:latest
+  marcusholtz/party-line-pager-full:latest
 ```
 
 ### First run
@@ -68,9 +68,9 @@ Run the daemon without a web terminal. Requires valid config from a prior wizard
 
 ```yaml
 services:
-  partylinepager:
-    image: marcusholtz/partylinepager-full:latest
-    container_name: partylinepager
+  party-line-pager:
+    image: marcusholtz/party-line-pager-full:latest
+    container_name: party-line-pager
     restart: unless-stopped
     volumes:
       - ./config:/config
@@ -84,20 +84,20 @@ services:
 
 ```bash
 docker run -d \
-  --name partylinepager \
+  --name party-line-pager \
   --restart unless-stopped \
   -v ./config:/config \
   -e PLP_HEADLESS=1 \
   -e PLP_PROVIDERS=tor,i2p,rns,web \
   -e TELEGRAM_TOKEN=your-bot-token \
-  marcusholtz/partylinepager-full:latest
+  marcusholtz/party-line-pager-full:latest
 ```
 
 No ttyd, no wizard, no port 7681. Administration is `docker exec` only:
 
 ```bash
-docker exec partylinepager partylinepagerctl --state /config/state roster
-docker exec partylinepager partylinepagerctl --state /config/state pause
+docker exec party-line-pager party-line-pagerctl --state /config/state roster
+docker exec party-line-pager party-line-pagerctl --state /config/state pause
 ```
 
 ## Parameters
@@ -126,7 +126,7 @@ Enable an adapter by providing its credentials. Only enabled adapters receive ro
 | `-e MATRIX_USER` | Matrix bot username |
 | `-e MATRIX_PASSWORD` | Matrix bot password |
 | `-e IRC_SERVER` | IRC server hostname |
-| `-e IRC_NICK=partylinepager` | IRC bot nickname |
+| `-e IRC_NICK=party-line-pager` | IRC bot nickname |
 | `-e IRC_CHANNEL` | IRC channel to idle in |
 | `-e IRC_PASSWORD` | NickServ password for SASL PLAIN |
 | `-e XMPP_JID` | XMPP JID for the bot |
@@ -152,14 +152,14 @@ One room at a time. No occupancy tracking, no catch-up, no record of who joined.
 ## Verifying a Deployment
 
 ```bash
-# Logs: look for "partylinepagerd is up"
-docker logs partylinepager
+# Logs: look for "party-line-pagerd is up"
+docker logs party-line-pager
 
-# Processes: tini, ttyd (if not headless), partylinepagerd
-docker exec partylinepager ps aux
+# Processes: tini, ttyd (if not headless), party-line-pagerd
+docker exec party-line-pager ps aux
 
 # Roster check:
-docker exec partylinepager partylinepagerctl --state /config/state roster
+docker exec party-line-pager party-line-pagerctl --state /config/state roster
 ```
 
 ## The Party Line Trifecta
@@ -171,7 +171,7 @@ Three transports, same encryption, same TUI:
 | [![Tor Party Line](https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/header/header--partyline--tor-onion-router-overlay-network.jpg)](https://gitlab.com/MarcusHoltz/tor-party-line) | [![I2P Party Line](https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/header/header--partyline--invisible-internet-project-i2p-garlic-roter.jpg)](https://gitlab.com/MarcusHoltz/i2p-party-line) | [![Reticulum Party Line](https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/header/header--partyline--reticulum-network-stack.jpg)](https://gitlab.com/MarcusHoltz/reticulum-party-line) |
 | [Tor Party Line](https://gitlab.com/MarcusHoltz/tor-party-line) | [I2P Party Line](https://gitlab.com/MarcusHoltz/i2p-party-line) | [Reticulum Party Line](https://gitlab.com/MarcusHoltz/reticulum-party-line) |
 
-PartylinePager orchestrates all three (plus WebRTC) and fans credentials across nine chat networks.
+PartyLinePager orchestrates all three (plus WebRTC) and fans credentials across nine chat networks.
 
 ## License
 

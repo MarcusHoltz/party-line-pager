@@ -60,7 +60,7 @@ if [ -z "$PROBE_UID" ]; then
 fi
 if [ "$PROBE_UID" = "0" ]; then
     log "container runs as root; set HOST_UID/HOST_GID in .env"
-    log "run ./partylinepager.sh once, or: echo HOST_UID=\$(id -u) >> .env"
+    log "run ./party-line-pager.sh once, or: echo HOST_UID=\$(id -u) >> .env"
     exit 1
 fi
 

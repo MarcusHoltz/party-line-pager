@@ -10,6 +10,6 @@
 # Nothing here starts a server.
 
 services:
-  partylinepagerd:
+  party-line-pagerd:
     environment:
       MATTERMOST_TOKEN: "${MATTERMOST_TOKEN:-}"

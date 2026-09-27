@@ -49,7 +49,7 @@ on:
       - 'cooldown.toml'
 
 env:
-  COMPOSE_PROJECT_NAME: partylinepager
+  COMPOSE_PROJECT_NAME: party-line-pager
 
 jobs:
   unit-tests:

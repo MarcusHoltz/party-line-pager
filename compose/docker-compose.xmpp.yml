@@ -5,6 +5,6 @@
 # Needs `[xmpp]` in adapters.toml and XMPP_PASSWORD in .env.
 
 services:
-  partylinepagerd:
+  party-line-pagerd:
     environment:
       XMPP_PASSWORD: "${XMPP_PASSWORD:-}"

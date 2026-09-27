@@ -17,7 +17,7 @@
 #   git clone https://gitlab.com/MarcusHoltz/i2p-party-line.git party-lines/i2p-party-line
 
 services:
-  partylinepagerd:
+  party-line-pagerd:
     environment:
       # Its own variable, not TOR_PARTYLINE_DIR. Every party-line overlay sets
       # the directory for its own hook on this one service, so a shared name

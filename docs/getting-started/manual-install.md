@@ -6,7 +6,7 @@ bring it up yourself.
 ## 1. Clone and create config
 
 ```sh
-git clone <this repo> partylinepager && cd partylinepager
+git clone <this repo> party-line-pager && cd party-line-pager
 mkdir -p config
 cp policy.example.toml config/policy.toml
 cp adapters.example.toml config/adapters.toml
@@ -92,13 +92,13 @@ echo 'COMPOSE_FILE=docker-compose.yml:compose/docker-compose.telegram.yml' >> .e
 
 ```sh
 docker compose up -d
-docker compose logs -f partylinepagerd
+docker compose logs -f party-line-pagerd
 ```
 
 ## 7. Verify
 
 ```sh
-docker compose run --rm partylinepagerd --check
+docker compose run --rm party-line-pagerd --check
 ```
 
 This lists every command the instance will answer, the resolved
@@ -109,7 +109,7 @@ Then message the bot `sub` on your configured network, approve
 yourself, and open a room:
 
 ```sh
-docker compose exec partylinepagerd partylinepagerctl who
-docker compose exec partylinepagerd \
-  partylinepagerctl approve telegram:123456789
+docker compose exec party-line-pagerd party-line-pagerctl who
+docker compose exec party-line-pagerd \
+  party-line-pagerctl approve telegram:123456789
 ```

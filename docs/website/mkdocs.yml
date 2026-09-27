@@ -1,5 +1,5 @@
 # --------------------------------------------------------------------------
-# PartylinePager docs site - built by squidfunk/mkdocs-material
+# PartyLinePager docs site - built by squidfunk/mkdocs-material
 #
 # This file is mounted into the container by docker-compose.yml in this
 # same folder.  Run from the project root, not from here:
@@ -10,8 +10,8 @@
 # See docs/website/README.md for the full explanation.
 # --------------------------------------------------------------------------
 
-site_name: PartylinePager
-site_description: Deploy, operate, and extend PartylinePager.
+site_name: PartyLinePager
+site_description: Deploy, operate, and extend PartyLinePager.
 
 # site_url is set automatically by CI (GitHub Actions / GitLab CI)
 # using the repo's Pages URL. You do NOT need to edit this line.

@@ -10,12 +10,12 @@ a native adapter.
 
 Apprise endpoints are **admin-added only**. Subscribers cannot
 add them through the bot. An admin adds them with
-`partylinepagerctl`:
+`party-line-pagerctl`:
 
 ```sh
-partylinepagerctl add apprise:ntfy://ntfy.sh/partylinepager \
+party-line-pagerctl add apprise:ntfy://ntfy.sh/party-line-pager \
   --tier trusted
-partylinepagerctl add \
+party-line-pagerctl add \
   apprise:mailto://user:pw@smtp.example.org
 ```
 
@@ -35,7 +35,7 @@ docker compose up -d
   at the sidecar (default: `http://apprise:8000/notify`).
 - Without `compose/docker-compose.apprise.yml`, native adapters still
   work. Only `apprise:` endpoint deliveries fail.
-- `partylinepager.sh` includes the apprise overlay
+- `party-line-pager.sh` includes the apprise overlay
   unconditionally because an admin can add an endpoint at any
   time.
 

@@ -1,6 +1,6 @@
 # XMPP
 
-Endpoint format: `xmpp:partylinepager@example.org`
+Endpoint format: `xmpp:party-line-pager@example.org`
 
 ## Setup
 
@@ -9,7 +9,7 @@ Register an account for the bot on any server, then configure:
 ```toml
 [xmpp]
 enabled = true
-jid = "partylinepager@example.org"
+jid = "party-line-pager@example.org"
 password = "env:XMPP_PASSWORD"
 tls = true
 ```
@@ -30,7 +30,7 @@ falls back to the domain's own address on port 5222.
   server files them under. ejabberd stamps `xml:lang='en'` by
   default, filing the body under `en`.
 - The resource is stripped from incoming messages, so
-  `partylinepager@example.org` is one subscriber whether they write
+  `party-line-pager@example.org` is one subscriber whether they write
   from phone or laptop. Broadcasts go to the bare JID, so
   every online client gets a copy.
 - `groupchat` and `error` stanzas are never treated as

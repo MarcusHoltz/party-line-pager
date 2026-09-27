@@ -1,4 +1,4 @@
-# PartylinePager
+# PartyLinePager
 
 Open a room on one chat network, and everyone who subscribed on **any** chat
 network gets a way into it.
@@ -51,14 +51,14 @@ Nine chat networks have native adapters. Everything else Apprise can reach
                                  |                          minus quiet hours
                                  +- state/ (JSON files, no database)
                                          ^
-                                 partylinepagerctl over SSH
+                                 party-line-pagerctl over SSH
 ```
 
 ---
 
 ## The Trifecta
 
-PartylinePager orchestrates three sibling projects, each a standalone encrypted push-to-talk voice app built for a different transport:
+PartyLinePager orchestrates three sibling projects, each a standalone encrypted push-to-talk voice app built for a different transport:
 
 
 | | | |
@@ -68,7 +68,7 @@ PartylinePager orchestrates three sibling projects, each a standalone encrypted 
 
 
 
-Each ships in triplicate: same TUI, same encryption, same PTT semantics, different wire. PartylinePager opens a room on any of them (or a WebRTC link), fans the credentials to your roster across nine chat networks, and tears it down when the timer runs out.
+Each ships in triplicate: same TUI, same encryption, same PTT semantics, different wire. PartyLinePager opens a room on any of them (or a WebRTC link), fans the credentials to your roster across nine chat networks, and tears it down when the timer runs out.
 
 ---
 
@@ -92,8 +92,8 @@ neither can be self-hosted.
 ## Quickstart
 
 ```sh
-git clone <this repo> partylinepager && cd partylinepager
-./partylinepager.sh
+git clone <this repo> party-line-pager && cd party-line-pager
+./party-line-pager.sh
 ```
 
 A menu comes up. Work down it, and it writes `config/policy.toml`,
@@ -105,9 +105,9 @@ Two numbers to expect: **about five minutes** of configuration, then a
 roughly 8 GB of RAM available to Docker; machines with less may
 need `CARGO_BUILD_JOBS=1` in the Dockerfile.
 
-The same script is the admin console afterwards, so `./partylinepager.sh` is the only
+The same script is the admin console afterwards, so `./party-line-pager.sh` is the only
 command worth memorising. Everything it does is a `docker compose` or
-`partylinepagerctl` invocation documented in the [full docs](docs/); the script
+`party-line-pagerctl` invocation documented in the [full docs](docs/); the script
 only saves the typing. It reads the config files at startup and owns them while
 it runs, so to hand-edit them, quit it first.
 
@@ -117,13 +117,13 @@ it runs, so to hand-edit them, quit it first.
 
 Everything in one container, no Docker socket required. Tor, I2P,
 Reticulum, Signal (native mode), and all chat adapters run as local
-processes. A ttyd web terminal serves the `partylinepager.sh` wizard at
+processes. A ttyd web terminal serves the `party-line-pager.sh` wizard at
 port 7681. Image size is ~1.1GB.
 
 ### Build
 
 ```sh
-docker build -f deploy/Dockerfile.full -t partylinepager-full .
+docker build -f deploy/Dockerfile.full -t party-line-pager-full .
 ```
 
 ### Three operating modes
@@ -131,11 +131,11 @@ docker build -f deploy/Dockerfile.full -t partylinepager-full .
 **1. Wizard mode** (first-time setup, or ongoing admin via browser):
 
 ```sh
-docker run -d --name partylinepager \
+docker run -d --name party-line-pager \
   -p 7681:7681 \
   -v ./config:/config \
   -e TTYD_CREDENTIAL=admin:changeme \
-  partylinepager-full
+  party-line-pager-full
 ```
 
 Opens a browser terminal at `http://<host>:7681`. The wizard walks you
@@ -145,14 +145,14 @@ the `/config` volume. No daemon runs until you tell the wizard to start it.
 **2. Wizard + daemon** (admin terminal with the daemon already running):
 
 ```sh
-docker run -d --name partylinepager \
+docker run -d --name party-line-pager \
   -p 7681:7681 \
   -v ./config:/config \
   -e PLP_AUTO_START=1 \
   -e TTYD_CREDENTIAL=admin:changeme \
   -e TELEGRAM_TOKEN="your-bot-token" \
   -e PLP_PROVIDERS="tor,i2p,rns,web" \
-  partylinepager-full
+  party-line-pager-full
 ```
 
 The daemon starts in the background on boot, then ttyd opens the wizard.
@@ -161,33 +161,33 @@ Browse to `http://<host>:7681` to manage the running instance.
 **3. Headless** (daemon only, no browser terminal):
 
 ```sh
-docker run -d --name partylinepager \
+docker run -d --name party-line-pager \
   -v ./config:/config \
   -e PLP_HEADLESS=1 \
   -e TELEGRAM_TOKEN="your-bot-token" \
   -e PLP_PROVIDERS="tor,i2p,rns,web" \
-  partylinepager-full
+  party-line-pager-full
 ```
 
 No ttyd, no wizard, no port 7681. The daemon runs as PID 1.
 Administration is `docker exec` only:
 
 ```sh
-docker exec partylinepager partylinepagerctl --state /config/state roster
-docker exec partylinepager partylinepagerctl --state /config/state pause
+docker exec party-line-pager party-line-pagerctl --state /config/state roster
+docker exec party-line-pager party-line-pagerctl --state /config/state pause
 ```
 
 ### Verifying a deployment
 
 ```sh
-# Logs: look for "partylinepagerd is up" and "Listening on port: 7681"
-docker logs partylinepager
+# Logs: look for "party-line-pagerd is up" and "Listening on port: 7681"
+docker logs party-line-pager
 
-# Processes: tini, ttyd (if not headless), partylinepagerd
-docker exec partylinepager ps aux
+# Processes: tini, ttyd (if not headless), party-line-pagerd
+docker exec party-line-pager ps aux
 
 # Daemon responding:
-docker exec partylinepager partylinepagerctl \
+docker exec party-line-pager party-line-pagerctl \
   --state /config/state roster
 ```
 

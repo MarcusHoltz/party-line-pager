@@ -1,12 +1,12 @@
 ---
-title: PartylinePager
+title: PartyLinePager
 ---
 
 <div class="plp-hero">
 
-<img class="plp-hero-logo" src="website/assets/logo.svg" alt="PartylinePager pager logo">
+<img class="plp-hero-logo" src="website/assets/logo.svg" alt="PartyLinePager pager logo">
 
-<h1>PartylinePager</h1>
+<h1>PartyLinePager</h1>
 
 <p>Open a room on one chat network, and everyone who subscribed
 on <strong>any</strong> chat network gets a way into it.</p>
@@ -26,7 +26,7 @@ on <strong>any</strong> chat network gets a way into it.</p>
   Email      -|                  |                   +- web ---------> room URL
   Mattermost -|                  +                   |      (no secret)
   Discord    -+                  ^                   |
-                         partylinepagerctl           +- fanout ------> message subscribers
+                         party-line-pagerctl           +- fanout ------> message subscribers
                                                               (minus quiet hours)
 
                                          
@@ -76,7 +76,7 @@ Nine chat networks have native adapters. Everything else
 
 ## The Trifecta
 
-PartylinePager orchestrates three sibling projects, each a
+PartyLinePager orchestrates three sibling projects, each a
 standalone encrypted push-to-talk voice app built for a
 different transport:
 
@@ -89,7 +89,7 @@ different transport:
 
 
 Each ships in triplicate: same TUI, same encryption, same PTT
-semantics, different wire. PartylinePager opens a room on any of
+semantics, different wire. PartyLinePager opens a room on any of
 them (or a WebRTC link), fans the credentials to your roster
 across nine chat networks, and tears it down when the timer
 runs out.

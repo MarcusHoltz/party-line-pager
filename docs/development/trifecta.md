@@ -48,7 +48,7 @@ Reticulum has extra files the others lack:
 - `docker-entrypoint.sh`
 - `measure/` directory
 
-## How PartylinePager uses them
+## How PartyLinePager uses them
 
 Standard deployment uses `transports/{tor,i2p,reticulum}-party-line/`,
 which contain relay-only compose files that pull published images
@@ -72,5 +72,5 @@ never trusting the hook's output blindly.
 
 ## Upstream issues
 
-Things found while building PartylinePager that belong upstream
+Things found while building PartyLinePager that belong upstream
 rather than here are tracked in the project's issue tracker.

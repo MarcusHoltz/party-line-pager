@@ -1,17 +1,17 @@
 {% set tpl = ix_lib.base.render.Render(values) %}
 
-{% set c1 = tpl.add_container(values.consts.partylinepager_container_name, "image") %}
+{% set c1 = tpl.add_container(values.consts.party_line_pager_container_name, "image") %}
 
-{% do c1.environment.add_env("PLP_PROVIDERS", values.partylinepager.providers) %}
-{% do c1.environment.add_env("PLP_AUTO_START", "1" if values.partylinepager.auto_start else "0") %}
-{% do c1.environment.add_env("PLP_HEADLESS", "1" if values.partylinepager.headless else "0") %}
-{% do c1.environment.add_env("PLP_WEB_BASE_URL", values.partylinepager.web_base_url) %}
+{% do c1.environment.add_env("PLP_PROVIDERS", values.party_line_pager.providers) %}
+{% do c1.environment.add_env("PLP_AUTO_START", "1" if values.party_line_pager.auto_start else "0") %}
+{% do c1.environment.add_env("PLP_HEADLESS", "1" if values.party_line_pager.headless else "0") %}
+{% do c1.environment.add_env("PLP_WEB_BASE_URL", values.party_line_pager.web_base_url) %}
 
-{% if values.partylinepager.ttyd_credential %}
-  {% do c1.environment.add_env("TTYD_CREDENTIAL", values.partylinepager.ttyd_credential) %}
+{% if values.party_line_pager.ttyd_credential %}
+  {% do c1.environment.add_env("TTYD_CREDENTIAL", values.party_line_pager.ttyd_credential) %}
 {% endif %}
 
-{% do c1.environment.add_user_envs(values.partylinepager.additional_envs) %}
+{% do c1.environment.add_user_envs(values.party_line_pager.additional_envs) %}
 {% do c1.add_port(values.network.web_port) %}
 
 {% do c1.add_storage(values.consts.base_config_path, values.storage.config) %}

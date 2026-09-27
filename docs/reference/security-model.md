@@ -15,7 +15,7 @@ broadcast. Endpoint addresses reject control characters.
 ## Administration is not on the network
 
 There is no admin command, no socket, no API.
-`partylinepagerctl` requires host access. Host access *is* the
+`party-line-pagerctl` requires host access. Host access *is* the
 admin credential.
 
 !!! note "Full image exception"

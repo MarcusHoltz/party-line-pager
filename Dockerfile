@@ -16,9 +16,9 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 COPY Cargo.toml Cargo.lock ./
-COPY crates/partylinepager-core/Cargo.toml crates/partylinepager-core/Cargo.toml
-COPY crates/partylinepagerd/Cargo.toml crates/partylinepagerd/Cargo.toml
-COPY crates/partylinepagerctl/Cargo.toml crates/partylinepagerctl/Cargo.toml
+COPY crates/party-line-pager-core/Cargo.toml crates/party-line-pager-core/Cargo.toml
+COPY crates/party-line-pagerd/Cargo.toml crates/party-line-pagerd/Cargo.toml
+COPY crates/party-line-pagerctl/Cargo.toml crates/party-line-pagerctl/Cargo.toml
 
 # Build once against stub sources so this layer, keyed only on the Cargo.tomls
 # above, caches every dependency (matrix-sdk, ring, aws-lc-sys...). Without
@@ -29,11 +29,11 @@ ARG CARGO_BUILD_JOBS=2
 ENV CARGO_BUILD_JOBS=${CARGO_BUILD_JOBS}
 ARG CMAKE_BUILD_PARALLEL_LEVEL=2
 ENV CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL}
-RUN mkdir -p crates/partylinepager-core/src crates/partylinepagerd/src crates/partylinepagerctl/src \
- && echo "" > crates/partylinepager-core/src/lib.rs \
- && echo "" > crates/partylinepagerd/src/lib.rs \
- && printf 'fn main() {}\n' > crates/partylinepagerd/src/main.rs \
- && printf 'fn main() {}\n' > crates/partylinepagerctl/src/main.rs \
+RUN mkdir -p crates/party-line-pager-core/src crates/party-line-pagerd/src crates/party-line-pagerctl/src \
+ && echo "" > crates/party-line-pager-core/src/lib.rs \
+ && echo "" > crates/party-line-pagerd/src/lib.rs \
+ && printf 'fn main() {}\n' > crates/party-line-pagerd/src/main.rs \
+ && printf 'fn main() {}\n' > crates/party-line-pagerctl/src/main.rs \
  && cargo build --release --workspace --bins
 
 COPY crates ./crates
@@ -84,13 +84,13 @@ COPY --from=dockercli /usr/local/bin/docker /usr/local/bin/docker
 COPY --from=dockercli /usr/local/libexec/docker/cli-plugins/docker-compose \
                       /usr/local/libexec/docker/cli-plugins/docker-compose
 
-COPY --from=build /src/target/release/partylinepagerd /usr/local/bin/partylinepagerd
-COPY --from=build /src/target/release/partylinepagerctl /usr/local/bin/partylinepagerctl
+COPY --from=build /src/target/release/party-line-pagerd /usr/local/bin/party-line-pagerd
+COPY --from=build /src/target/release/party-line-pagerctl /usr/local/bin/party-line-pagerctl
 COPY --from=yopass-build /go/bin/yopass /usr/local/bin/yopass
-COPY hooks /opt/partylinepager/hooks
-RUN chmod +x /opt/partylinepager/hooks/*.sh
+COPY hooks /opt/party-line-pager/hooks
+RUN chmod +x /opt/party-line-pager/hooks/*.sh
 
 RUN useradd -r -s /usr/sbin/nologin -d /nonexistent partyline
 USER partyline
 
-ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/partylinepagerd"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/party-line-pagerd"]

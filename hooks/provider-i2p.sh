@@ -1,13 +1,13 @@
 #!/bin/sh
-# PartylinePager provider hook: bring up an i2p-party-line relay and print its
+# PartyLinePager provider hook: bring up an i2p-party-line relay and print its
 # .b32.i2p address.
 #
-# Contract with partylinepagerd:
+# Contract with party-line-pagerd:
 #   stdin  the shared secret, one line. Never argv, never the environment,
 #          because /proc/<pid>/cmdline and /proc/<pid>/environ are readable by
 #          any process running as the same user.
-#   env    PARTYLINEPAGER_TTL_SECS  how long the room is meant to live
-#          PARTYLINEPAGER_NOTE      the host's one-line note, may be empty
+#   env    PARTY_LINE_PAGER_TTL_SECS  how long the room is meant to live
+#          PARTY_LINE_PAGER_NOTE      the host's one-line note, may be empty
 #   stdout exactly one JSON object: {"address":"...b32.i2p"}
 #          Anything else printed on stdout is ignored as long as the JSON object
 #          is the last line starting with '{'. Log to stderr freely.
@@ -27,7 +27,7 @@ HOOKS_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLR="$HOOKS_DIR/plp-runtime.sh"
 
 # Its own variable rather than PARTYLINE_DIR: all four hooks run inside the
-# same partylinepagerd container, so one shared name would have the last compose
+# same party-line-pagerd container, so one shared name would have the last compose
 # overlay loaded silently win and point every hook at one checkout.
 PARTYLINE_DIR="${I2P_PARTYLINE_DIR:-/opt/i2p-party-line}"
 COMPOSE_SERVICE="${I2P_COMPOSE_SERVICE:-partyline}"
@@ -46,7 +46,7 @@ BOOTSTRAP_TIMEOUT="${I2P_BOOTSTRAP_TIMEOUT:-240}"
 # `up` would fail on it) and no PulseAudio socket. Kept as a separate file so
 # the checkout stays exactly as upstream ships it. Set to an empty value to run
 # the shipped compose file unmodified.
-RELAY_OVERRIDE="${I2P_RELAY_OVERRIDE-/opt/partylinepager/hooks/i2p-relay.override.yml}"
+RELAY_OVERRIDE="${I2P_RELAY_OVERRIDE-/opt/party-line-pager/hooks/i2p-relay.override.yml}"
 
 override_arg=""
 if [ -n "$RELAY_OVERRIDE" ] && [ -f "$RELAY_OVERRIDE" ]; then
@@ -71,7 +71,7 @@ if [ ! -d "$PARTYLINE_DIR" ]; then
 fi
 
 # Stop anything left over from a previous run before touching its key: the
-# state dir is owned by the container's root, not by whatever uid partylinepagerd
+# state dir is owned by the container's root, not by whatever uid party-line-pagerd
 # runs as, so it can only be read or wiped from *inside* the container. Doing
 # it under a still-running container would race i2pd's open handle on the key.
 "$PLR" down "$PARTYLINE_DIR" >&2 || true
@@ -118,5 +118,5 @@ if [ -z "$ADDRESS" ]; then
     exit 1
 fi
 
-log "up at $ADDRESS after ${waited}s (ttl ${PARTYLINEPAGER_TTL_SECS:-unset}s)"
+log "up at $ADDRESS after ${waited}s (ttl ${PARTY_LINE_PAGER_TTL_SECS:-unset}s)"
 printf '{"address":"%s"}\n' "$ADDRESS"

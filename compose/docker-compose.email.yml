@@ -7,7 +7,7 @@
 # some providers; set both to the same value when they are not.
 
 services:
-  partylinepagerd:
+  party-line-pagerd:
     environment:
       IMAP_PASSWORD: "${IMAP_PASSWORD:-}"
       SMTP_PASSWORD: "${SMTP_PASSWORD:-}"

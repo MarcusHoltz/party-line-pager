@@ -3,14 +3,14 @@
 #   docker compose -f compose/docker-compose.build-tools.yml \
 #     run --rm build-tools cargo test --workspace
 #   docker compose -f compose/docker-compose.build-tools.yml \
-#     run --rm build-tools cargo test -p partylinepager-core
+#     run --rm build-tools cargo test -p party-line-pager-core
 #
 # Builds from the same Dockerfile's build stage and keeps the cargo registry
 # in ./.cache and the build output in ./target, so repeat runs are fast and
 # nothing root-owned lands in the checkout.
 #
 # Also used by hooks/audit-cargo-deps.sh and hooks/update-cargo-deps.sh
-# (partylinepager.sh Maintenance menu items 5 and 6).
+# (party-line-pager.sh Maintenance menu items 5 and 6).
 
 services:
   build-tools:

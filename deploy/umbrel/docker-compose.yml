@@ -1,10 +1,10 @@
 version: "3.7"
 services:
   server:
-    image: marcusholtz/partylinepager-full:latest
+    image: marcusholtz/party-line-pager-full:latest
     restart: on-failure
     ports:
-      - "${APP_PARTYLINEPAGER_PORT:-7681}:7681"
+      - "${APP_PARTY_LINE_PAGER_PORT:-7681}:7681"
     volumes:
       - ${APP_DATA_DIR}/config:/config
     environment:
@@ -18,10 +18,10 @@ services:
       MATRIX_HOMESERVER: ""
       MATRIX_USER: ""
       MATRIX_PASSWORD: ""
-      MATRIX_STORE_PATH: "/var/lib/partylinepager/matrix"
+      MATRIX_STORE_PATH: "/var/lib/party-line-pager/matrix"
       IRC_SERVER: ""
       IRC_PORT: "6697"
-      IRC_NICK: "partylinepager"
+      IRC_NICK: "party-line-pager"
       IRC_TLS: "true"
       IRC_CHANNEL: ""
       IRC_ACCOUNT: ""

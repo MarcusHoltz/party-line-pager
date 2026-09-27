@@ -59,7 +59,7 @@ A room open follows this sequence:
 sequenceDiagram
   participant Sub as Subscriber
   participant Adapter as Chat Adapter
-  participant Daemon as partylinepagerd
+  participant Daemon as party-line-pagerd
   participant Hook as provider hook
   participant Shim as plp-runtime.sh
   participant Relay as Transport relay
@@ -92,7 +92,7 @@ lifecycle operations. Every provider hook calls it instead of
 ``` mermaid
 flowchart TD
   HOOK[Provider hook] --> SHIM{plp-runtime.sh}
-  SHIM --> CHECK{PARTYLINEPAGER_RUNTIME?}
+  SHIM --> CHECK{PARTY_LINE_PAGER_RUNTIME?}
 
   CHECK -- compose --> COMPOSE_UP["docker compose up -d"]
   CHECK -- compose --> COMPOSE_DOWN["docker compose down"]

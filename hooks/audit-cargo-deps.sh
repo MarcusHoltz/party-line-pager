@@ -22,7 +22,7 @@
 # passes. Publish-age is enforced at update time only, by
 # hooks/update-cargo-deps.sh.
 #
-# Not part of any hook contract partylinepagerd calls: there is no CI in this
+# Not part of any hook contract party-line-pagerd calls: there is no CI in this
 # repo to wire it into yet, so this is a standalone check an admin runs by
 # hand (or points a cron/CI job at later), same standing as
 # check-yopass-version.sh.
@@ -104,7 +104,7 @@ fi
 if [ "$PROBE_UID" = "0" ]; then
     log "the build-tools container would run as root; nothing was checked"
     log "it would root-own ./target and ./.cache in this checkout, needing sudo to clear"
-    log "fix: run ./partylinepager.sh, which writes HOST_UID and HOST_GID to .env,"
+    log "fix: run ./party-line-pager.sh, which writes HOST_UID and HOST_GID to .env,"
     log "     or set them by hand to your own id -u and id -g"
     exit 1
 fi

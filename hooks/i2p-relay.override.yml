@@ -3,7 +3,7 @@
 # repo stays exactly as it ships.
 #
 # Two things the shipped file does for an interactive user on a desktop are
-# wrong for a PartylinePager relay on a server:
+# wrong for a PartyLinePager relay on a server:
 #
 #   devices: /dev/snd  A relay makes no sound. On a headless host there is no
 #                      /dev/snd at all, and `docker compose up` fails outright

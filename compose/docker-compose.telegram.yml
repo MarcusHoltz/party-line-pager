@@ -6,6 +6,6 @@
 # Needs `[telegram]` in adapters.toml and TELEGRAM_TOKEN in .env.
 
 services:
-  partylinepagerd:
+  party-line-pagerd:
     environment:
       TELEGRAM_TOKEN: "${TELEGRAM_TOKEN:-}"

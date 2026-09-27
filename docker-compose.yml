@@ -11,7 +11,7 @@
 #   COMPOSE_FILE=docker-compose.yml:compose/docker-compose.telegram.yml
 #
 # The README section "Compose files" has a recipe for each combination.
-# `./partylinepager.sh` works the list out from policy.toml and adapters.toml, so the
+# `./party-line-pager.sh` works the list out from policy.toml and adapters.toml, so the
 # menu path never needs any of this typed.
 #
 #   compose/docker-compose.telegram.yml    one per network: telegram, matrix,
@@ -40,7 +40,7 @@
 # the host except the image layer cache, which is rebuildable.
 
 services:
-  partylinepagerd:
+  party-line-pagerd:
     build:
       context: .
       args:
@@ -56,10 +56,10 @@ services:
       # Credentials referenced as env:NAME from adapters.toml arrive from the
       # per-network overlay files, not from here. Loading only the overlays you
       # use keeps every other secret out of this process.
-    command: ["--state", "/etc/partylinepager/state"]
+    command: ["--state", "/etc/party-line-pager/state"]
     volumes:
       # Config and state live under the same mount. Config files (policy.toml,
       # adapters.toml) are read-only to the daemon; the state/ subdirectory is
       # created by the daemon on first run via create_dir_all. One mount means
       # no empty directories to ship or pre-create.
-      - ./config:/etc/partylinepager
+      - ./config:/etc/party-line-pager

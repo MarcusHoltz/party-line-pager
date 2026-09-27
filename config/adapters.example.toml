@@ -1,4 +1,4 @@
-# PartylinePager chat network credentials.
+# PartyLinePager chat network credentials.
 #
 # chmod 600 this file and keep it out of version control. Any secret may be
 # written as `env:NAME` to read it from the environment instead, which is how
@@ -22,9 +22,9 @@ token = "env:TELEGRAM_TOKEN"
 [matrix]
 enabled = true
 homeserver = "https://matrix.example.org"
-user = "partylinepager"
+user = "party-line-pager"
 password = "env:MATRIX_PASSWORD"
-store_path = "/var/lib/partylinepager/matrix"
+store_path = "/var/lib/party-line-pager/matrix"
 
 # ---------------------------------------------------------------------------
 # IRC. Note that IRC has no offline delivery: a broadcast to somebody who is
@@ -50,8 +50,8 @@ enabled = true
 server = "irc.libera.chat"
 port = 6697
 tls = true
-nick = "partylinepager"
-# account = "partylinepager"
+nick = "party-line-pager"
+# account = "party-line-pager"
 # password = "env:IRC_PASSWORD"
 channels = ["#your-channel"]
 
@@ -60,7 +60,7 @@ channels = ["#your-channel"]
 # ---------------------------------------------------------------------------
 [xmpp]
 enabled = true
-jid = "partylinepager@example.org"
+jid = "party-line-pager@example.org"
 password = "env:XMPP_PASSWORD"
 # STARTTLS before logging in. Leave it alone: false sends the password over the
 # wire in the clear, and SASL does not save you. It exists for the throwaway
@@ -86,15 +86,15 @@ poll_interval = "30s"
 enabled = true
 imap_host = "imap.example.org"
 imap_port = 993
-imap_user = "partylinepager@example.org"
+imap_user = "party-line-pager@example.org"
 imap_password = "env:IMAP_PASSWORD"
 mailbox = "INBOX"
 
 smtp_host = "smtp.example.org"
 smtp_port = 587
-smtp_user = "partylinepager@example.org"
+smtp_user = "party-line-pager@example.org"
 smtp_password = "env:SMTP_PASSWORD"
-from = "partylinepager@example.org"
+from = "party-line-pager@example.org"
 
 # Encrypt both legs. Leave it alone: false sends the mailbox password in the
 # clear over IMAP and SMTP both. It exists for the throwaway server the live

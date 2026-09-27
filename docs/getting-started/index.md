@@ -1,6 +1,6 @@
 # Getting Started
 
-Three ways to run PartylinePager. Pick one.
+Three ways to run PartyLinePager. Pick one.
 
 ## Recomended for (Unraid, Portainer, etc)
 
@@ -33,7 +33,7 @@ runs, or who already have compose workflows.
 
 Hand-edit `config/policy.toml` and `config/adapters.toml`, pick
 your compose overlays, and bring it up yourself. Everything the
-wizard does is a compose or `partylinepagerctl` invocation
+wizard does is a compose or `party-line-pagerctl` invocation
 documented in the reference.
 
 Best for: anyone who wants to understand every moving part

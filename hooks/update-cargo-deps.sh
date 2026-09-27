@@ -10,7 +10,7 @@
 # resolves and cools the lockfile in a temporary workspace copy and never
 # compiles anything or runs a dependency build script.
 #
-# Not part of any hook contract partylinepagerd calls: there is no CI in this
+# Not part of any hook contract party-line-pagerd calls: there is no CI in this
 # repo to wire it into yet, so this is a standalone script an admin runs by
 # hand, same standing as check-yopass-version.sh.
 #
@@ -90,7 +90,7 @@ fi
 if [ "$PROBE_UID" = "0" ]; then
     log "the build-tools container would run as root; Cargo.lock is untouched"
     log "it would write Cargo.lock as root and restore could not undo it"
-    log "fix: run ./partylinepager.sh, which writes HOST_UID and HOST_GID to .env,"
+    log "fix: run ./party-line-pager.sh, which writes HOST_UID and HOST_GID to .env,"
     log "     or set them by hand to your own id -u and id -g"
     exit 1
 fi

@@ -21,12 +21,12 @@ Every adapter follows three rules:
 | Network | Endpoint format | Setup guide |
 |---|---|---|
 | Telegram | `telegram:123456789` | [Telegram](chat-networks/telegram.md) |
-| Matrix | `matrix:@partylinepager:example.org` | [Matrix](chat-networks/matrix.md) |
+| Matrix | `matrix:@party-line-pager:example.org` | [Matrix](chat-networks/matrix.md) |
 | Signal | `signal:+15555550100` | [Signal](chat-networks/signal.md) |
-| IRC | `irc:partylinepager` | [IRC](chat-networks/irc.md) |
-| XMPP | `xmpp:partylinepager@example.org` | [XMPP](chat-networks/xmpp.md) |
-| Mastodon | `mastodon:partylinepager@example.org` | [Mastodon](chat-networks/mastodon.md) |
-| Email | `email:partylinepager@example.org` | [Email](chat-networks/email.md) |
+| IRC | `irc:party-line-pager` | [IRC](chat-networks/irc.md) |
+| XMPP | `xmpp:party-line-pager@example.org` | [XMPP](chat-networks/xmpp.md) |
+| Mastodon | `mastodon:party-line-pager@example.org` | [Mastodon](chat-networks/mastodon.md) |
+| Email | `email:party-line-pager@example.org` | [Email](chat-networks/email.md) |
 | Mattermost | `mattermost:8y9z...` (26-char user id) | [Mattermost](chat-networks/mattermost.md) |
 | Discord | `discord:891...` (numeric snowflake) | [Discord](chat-networks/discord.md) |
 | Apprise | `apprise:ntfy://host/topic` | [Apprise](chat-networks/apprise.md) |

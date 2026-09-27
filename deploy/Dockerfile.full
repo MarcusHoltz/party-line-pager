@@ -1,10 +1,10 @@
-# PartylinePager full image: daemon + all transports + wizard + ttyd.
+# PartyLinePager full image: daemon + all transports + wizard + ttyd.
 #
 # Everything in one container, no Docker socket required. Transports run
 # as local processes managed by hooks/plp-runtime.sh in direct mode.
 #
-# Build:  docker build -f deploy/Dockerfile.full -t partylinepager-full .
-# Run:    docker run -p 7681:7681 -v ./config:/config partylinepager-full
+# Build:  docker build -f deploy/Dockerfile.full -t party-line-pager-full .
+# Run:    docker run -p 7681:7681 -v ./config:/config party-line-pager-full
 # Browse: http://localhost:7681
 #
 # Pin party-line repos to tags at release time:
@@ -21,9 +21,9 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 COPY Cargo.toml Cargo.lock ./
-COPY crates/partylinepager-core/Cargo.toml crates/partylinepager-core/Cargo.toml
-COPY crates/partylinepagerd/Cargo.toml crates/partylinepagerd/Cargo.toml
-COPY crates/partylinepagerctl/Cargo.toml crates/partylinepagerctl/Cargo.toml
+COPY crates/party-line-pager-core/Cargo.toml crates/party-line-pager-core/Cargo.toml
+COPY crates/party-line-pagerd/Cargo.toml crates/party-line-pagerd/Cargo.toml
+COPY crates/party-line-pagerctl/Cargo.toml crates/party-line-pagerctl/Cargo.toml
 
 # Dep-cache layer: build once against stubs so this layer caches every
 # dependency. Without buildx there is no --mount=type=cache.
@@ -31,11 +31,11 @@ ARG CARGO_BUILD_JOBS=2
 ENV CARGO_BUILD_JOBS=${CARGO_BUILD_JOBS}
 ARG CMAKE_BUILD_PARALLEL_LEVEL=2
 ENV CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL}
-RUN mkdir -p crates/partylinepager-core/src crates/partylinepagerd/src crates/partylinepagerctl/src \
- && echo "" > crates/partylinepager-core/src/lib.rs \
- && echo "" > crates/partylinepagerd/src/lib.rs \
- && printf 'fn main() {}\n' > crates/partylinepagerd/src/main.rs \
- && printf 'fn main() {}\n' > crates/partylinepagerctl/src/main.rs \
+RUN mkdir -p crates/party-line-pager-core/src crates/party-line-pagerd/src crates/party-line-pagerctl/src \
+ && echo "" > crates/party-line-pager-core/src/lib.rs \
+ && echo "" > crates/party-line-pagerd/src/lib.rs \
+ && printf 'fn main() {}\n' > crates/party-line-pagerd/src/main.rs \
+ && printf 'fn main() {}\n' > crates/party-line-pagerctl/src/main.rs \
  && cargo build --release --workspace --bins
 
 COPY crates ./crates
@@ -120,8 +120,8 @@ RUN pip install --no-cache-dir --break-system-packages rns==1.5.4 lxmf==1.1.1 ap
  && rm -rf /var/lib/apt/lists/*
 
 # Rust binaries.
-COPY --from=build /src/target/release/partylinepagerd /usr/local/bin/partylinepagerd
-COPY --from=build /src/target/release/partylinepagerctl /usr/local/bin/partylinepagerctl
+COPY --from=build /src/target/release/party-line-pagerd /usr/local/bin/party-line-pagerd
+COPY --from=build /src/target/release/party-line-pagerctl /usr/local/bin/party-line-pagerctl
 COPY --from=yopass-build /go/bin/yopass /usr/local/bin/yopass
 COPY --from=mkp224o-builder /tmp/mkp224o/mkp224o /usr/local/bin/mkp224o
 
@@ -148,12 +148,12 @@ RUN chmod +x /opt/tor-party-line/entrypoint.sh \
  && ln -s /opt/tor-party-line/tor-party-line.sh /tor-party-line.sh
 
 # Hooks, wizard, example configs.
-COPY hooks /opt/partylinepager/hooks
-RUN chmod +x /opt/partylinepager/hooks/*.sh
-COPY partylinepager.sh /opt/partylinepager/partylinepager.sh
-RUN chmod +x /opt/partylinepager/partylinepager.sh
-COPY config/policy.example.toml /opt/partylinepager/policy.example.toml
-COPY config/adapters.example.toml /opt/partylinepager/adapters.example.toml
+COPY hooks /opt/party-line-pager/hooks
+RUN chmod +x /opt/party-line-pager/hooks/*.sh
+COPY party-line-pager.sh /opt/party-line-pager/party-line-pager.sh
+RUN chmod +x /opt/party-line-pager/party-line-pager.sh
+COPY config/policy.example.toml /opt/party-line-pager/policy.example.toml
+COPY config/adapters.example.toml /opt/party-line-pager/adapters.example.toml
 
 # Entrypoint.
 COPY deploy/entrypoint.full.sh /entrypoint.sh
@@ -168,7 +168,7 @@ RUN mkdir -p /var/lib/tor/hidden_service /data/.partyline \
 RUN useradd -m -u 1000 partyline 2>/dev/null || true
 
 # Runtime env.
-ENV PARTYLINEPAGER_RUNTIME=direct
+ENV PARTY_LINE_PAGER_RUNTIME=direct
 ENV SIGNAL_CLI_REST_API_PLUGIN_SHARED_OBJ_DIR=/usr/local/bin/
 ENV TOR_PARTYLINE_DIR=/opt/tor-party-line
 ENV I2P_PARTYLINE_DIR=/opt/i2p-party-line

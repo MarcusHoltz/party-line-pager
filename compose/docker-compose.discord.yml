@@ -8,6 +8,6 @@
 # section for the lobby-server enrollment flow this adapter assumes.
 
 services:
-  partylinepagerd:
+  party-line-pagerd:
     environment:
       DISCORD_TOKEN: "${DISCORD_TOKEN:-}"

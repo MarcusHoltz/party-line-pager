@@ -75,10 +75,10 @@
 #
 # Two images in the release stage:
 #
-#   partylinepager        V2 modular image (docker-compose deployment)
+#   party-line-pager        V2 modular image (docker-compose deployment)
 #                         Built from: ./Dockerfile
 #
-#   partylinepager-full   V1 all-in-one image (single container)
+#   party-line-pager-full   V1 all-in-one image (single container)
 #                         Built from: deploy/Dockerfile.full
 #
 # Both get tagged with :latest and :<version> on each registry.
@@ -140,7 +140,7 @@ variables:
   HOST_UID: "1000"
   HOST_GID: "1000"
   # GitLab CR namespaces (auto-adapt to forks via CI_REGISTRY_IMAGE).
-  FULL_IMAGE_GL: "${CI_REGISTRY_IMAGE}/partylinepager-full"
+  FULL_IMAGE_GL: "${CI_REGISTRY_IMAGE}/party-line-pager-full"
   COMPOSE_IMAGE_GL: "${CI_REGISTRY_IMAGE}"
   # Registry toggles. Override per-pipeline or as CI/CD variables.
   PUSH_DOCKERHUB: "false"
@@ -272,7 +272,7 @@ build-full-image:
     - docker build -f deploy/Dockerfile.full
         --build-arg CARGO_BUILD_JOBS=1
         --build-arg CMAKE_BUILD_PARALLEL_LEVEL=1
-        -t partylinepager-full .
+        -t party-line-pager-full .
   timeout: 60 minutes
   needs: [unit-tests, supply-chain-audit]
   # Same inclusion rules as the test jobs (see build-compose-image).
@@ -350,8 +350,8 @@ push-registries:
     # Docker Hub namespace: use DOCKERHUB_USERNAME if set,
     # otherwise fall back to the GitLab project namespace.
     - DH_NS="${DOCKERHUB_USERNAME:-$CI_PROJECT_NAMESPACE}"
-    - FULL_IMAGE_DH="${DH_NS}/partylinepager-full"
-    - COMPOSE_IMAGE_DH="${DH_NS}/partylinepager"
+    - FULL_IMAGE_DH="${DH_NS}/party-line-pager-full"
+    - COMPOSE_IMAGE_DH="${DH_NS}/party-line-pager"
 
     # -- Full image --------------------------------------------------------
     - docker build -f deploy/Dockerfile.full
@@ -400,17 +400,17 @@ push-registries:
     #   if [ "$PUSH_SELFHOSTED" = "true" ] \
     #      && [ -n "${SELFHOSTED_REGISTRY:-}" ]; then
     #     docker tag "${FULL_IMAGE_GL}:latest" \
-    #       "${SELFHOSTED_REGISTRY}/partylinepager-full:latest"
+    #       "${SELFHOSTED_REGISTRY}/party-line-pager-full:latest"
     #     docker tag "${FULL_IMAGE_GL}:${RELEASE_VERSION}" \
-    #       "${SELFHOSTED_REGISTRY}/partylinepager-full:${RELEASE_VERSION}"
-    #     docker push "${SELFHOSTED_REGISTRY}/partylinepager-full:latest"
-    #     docker push "${SELFHOSTED_REGISTRY}/partylinepager-full:${RELEASE_VERSION}"
+    #       "${SELFHOSTED_REGISTRY}/party-line-pager-full:${RELEASE_VERSION}"
+    #     docker push "${SELFHOSTED_REGISTRY}/party-line-pager-full:latest"
+    #     docker push "${SELFHOSTED_REGISTRY}/party-line-pager-full:${RELEASE_VERSION}"
     #     docker tag "${COMPOSE_IMAGE_GL}:latest" \
-    #       "${SELFHOSTED_REGISTRY}/partylinepager:latest"
+    #       "${SELFHOSTED_REGISTRY}/party-line-pager:latest"
     #     docker tag "${COMPOSE_IMAGE_GL}:${RELEASE_VERSION}" \
-    #       "${SELFHOSTED_REGISTRY}/partylinepager:${RELEASE_VERSION}"
-    #     docker push "${SELFHOSTED_REGISTRY}/partylinepager:latest"
-    #     docker push "${SELFHOSTED_REGISTRY}/partylinepager:${RELEASE_VERSION}"
+    #       "${SELFHOSTED_REGISTRY}/party-line-pager:${RELEASE_VERSION}"
+    #     docker push "${SELFHOSTED_REGISTRY}/party-line-pager:latest"
+    #     docker push "${SELFHOSTED_REGISTRY}/party-line-pager:${RELEASE_VERSION}"
     #   fi
 
 # ---------------------------------------------------------------------------

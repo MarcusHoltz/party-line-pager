@@ -1,6 +1,6 @@
 # Architecture
 
-PartylinePager runs in two deployment modes. Both use the same
+PartyLinePager runs in two deployment modes. Both use the same
 daemon, the same hooks, and the same configuration files. The
 difference is how transport relays are managed.
 
@@ -27,7 +27,7 @@ compose tooling (Unraid, Portainer, appliance-style deploys).
 graph LR
   subgraph standard ["Standard (multi-container)"]
     direction TB
-    D1[partylinepagerd] -- hooks --> R1[plp-runtime.sh]
+    D1[party-line-pagerd] -- hooks --> R1[plp-runtime.sh]
     R1 -- docker compose --> T1[Tor relay]
     R1 -- docker compose --> T2[I2P relay]
     R1 -- docker compose --> T3[RNS relay]
@@ -35,7 +35,7 @@ graph LR
 
   subgraph full ["Full (all-in-one)"]
     direction TB
-    D2[partylinepagerd] -- hooks --> R2[plp-runtime.sh]
+    D2[party-line-pagerd] -- hooks --> R2[plp-runtime.sh]
     R2 -- PID files --> T4[Tor process]
     R2 -- PID files --> T5[I2P process]
     R2 -- PID files --> T6[RNS process]
@@ -44,7 +44,7 @@ graph LR
 ```
 
 Both modes share identical hook scripts. The runtime shim
-(`plp-runtime.sh`) checks `PARTYLINEPAGER_RUNTIME` and
+(`plp-runtime.sh`) checks `PARTY_LINE_PAGER_RUNTIME` and
 dispatches accordingly: `compose` for Standard, `direct` for
 Full. See [provider hooks](provider-hooks.md#runtime-shim-standard-vs-full)
 for the shim details.
@@ -56,5 +56,5 @@ for the shim details.
 | Setup | compose overlays | single `docker run` |
 | Transport isolation | separate containers, no port conflicts | shared network stack, one relay at a time |
 | Docker socket | required for transport containers | not required |
-| Admin access | host SSH / `partylinepagerctl` | browser terminal (ttyd) |
+| Admin access | host SSH / `party-line-pagerctl` | browser terminal (ttyd) |
 | Image size | ~200 MB base + relay images | ~1.1 GB |

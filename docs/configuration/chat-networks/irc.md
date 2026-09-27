@@ -1,6 +1,6 @@
 # IRC
 
-Endpoint format: `irc:partylinepager` (nickname).
+Endpoint format: `irc:party-line-pager` (nickname).
 
 ## Setup
 
@@ -23,8 +23,8 @@ enabled = true
 server = "irc.libera.chat"
 port = 6697
 tls = true
-nick = "partylinepager"
-# account = "partylinepager"
+nick = "party-line-pager"
+# account = "party-line-pager"
 # password = "env:IRC_PASSWORD"
 channels = ["#your-channel"]
 ```
@@ -88,7 +88,7 @@ case).
 |---|---|---|
 | `IRC_SERVER` | (none) | Enables `[irc]` adapter |
 | `IRC_PORT` | `6697` | Server port |
-| `IRC_NICK` | `partylinepager` | Bot's nickname |
+| `IRC_NICK` | `party-line-pager` | Bot's nickname |
 | `IRC_TLS` | `true` | TLS for the connection |
 | `IRC_CHANNEL` | (none) | Channel to idle in |
 | `IRC_ACCOUNT` | (none) | Services account, if different from nick |

@@ -8,7 +8,7 @@ Everything runs through Docker; no host toolchain needed.
 docker compose build
 ```
 
-This builds the `partylinepagerd` image from the `Dockerfile`:
+This builds the `party-line-pagerd` image from the `Dockerfile`:
 a multi-stage build that compiles the Rust workspace and
 installs the yopass CLI, Docker CLI, and compose plugin into a
 minimal Debian runtime image.
@@ -16,7 +16,7 @@ minimal Debian runtime image.
 The full image (all transports in one container):
 
 ```sh
-docker build -f deploy/Dockerfile.full -t partylinepager-full .
+docker build -f deploy/Dockerfile.full -t party-line-pager-full .
 ```
 
 ## Build memory requirements
@@ -86,7 +86,7 @@ T="-f compose/docker-compose.build-tools.yml"
 docker compose $T run --rm build-tools
 
 # One crate
-docker compose $T run --rm build-tools cargo test -p partylinepager-core
+docker compose $T run --rm build-tools cargo test -p party-line-pager-core
 ```
 
 ## Ad-hoc cargo commands
@@ -122,7 +122,7 @@ docker compose $T run --rm -T build-tools \
 ## Supply-chain auditing
 
 Three maintenance scripts use `compose/docker-compose.build-tools.yml`
-as a build environment. Available from the `partylinepager.sh`
+as a build environment. Available from the `party-line-pager.sh`
 Maintenance menu (items 5, 6, 7) or standalone:
 
 ```sh
@@ -217,8 +217,8 @@ Two images, from two Dockerfiles, built in parallel:
 
 | Image | Dockerfile | Description |
 |-------|-----------|-------------|
-| `partylinepager` | `./Dockerfile` | V2 modular daemon (docker-compose deployment) |
-| `partylinepager-full` | `deploy/Dockerfile.full` | V1 all-in-one (everything in one container) |
+| `party-line-pager` | `./Dockerfile` | V2 modular daemon (docker-compose deployment) |
+| `party-line-pager-full` | `deploy/Dockerfile.full` | V1 all-in-one (everything in one container) |
 
 Both get tagged `:latest` and `:<version>` on each registry.
 
@@ -232,15 +232,15 @@ versa.
 
 | Image | Docker Hub | GHCR |
 |-------|-----------|------|
-| Standard (daemon) | `<owner>/partylinepager` | `ghcr.io/<owner>/partylinepager` |
-| Full (all-in-one) | `<owner>/partylinepager-full` | `ghcr.io/<owner>/partylinepager-full` |
+| Standard (daemon) | `<owner>/party-line-pager` | `ghcr.io/<owner>/party-line-pager` |
+| Full (all-in-one) | `<owner>/party-line-pager-full` | `ghcr.io/<owner>/party-line-pager-full` |
 
 **GitLab CI (`.gitlab-ci.yml`) pushes to:**
 
 | Image | Docker Hub | GitLab CR |
 |-------|-----------|-----------|
-| Standard (daemon) | `<owner>/partylinepager` | `registry.gitlab.com/<ns>/<project>` |
-| Full (all-in-one) | `<owner>/partylinepager-full` | `registry.gitlab.com/<ns>/<project>/partylinepager-full` |
+| Standard (daemon) | `<owner>/party-line-pager` | `registry.gitlab.com/<ns>/<project>` |
+| Full (all-in-one) | `<owner>/party-line-pager-full` | `registry.gitlab.com/<ns>/<project>/party-line-pager-full` |
 
 `<owner>` adapts to forks automatically (GitHub username or
 Docker Hub username). `<ns>/<project>` is the GitLab project

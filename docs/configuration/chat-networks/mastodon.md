@@ -1,8 +1,8 @@
 # Mastodon
 
-Endpoint format: `mastodon:partylinepager@example.org` (acct handle).
-Bare (`partylinepager`) for a local account,
-`partylinepager@elsewhere.org` for federated.
+Endpoint format: `mastodon:party-line-pager@example.org` (acct handle).
+Bare (`party-line-pager`) for a local account,
+`party-line-pager@elsewhere.org` for federated.
 
 ## Setup
 
@@ -26,7 +26,7 @@ poll_interval = "30s"
 ## Behavior
 
 - **Only direct-visibility mentions are commands.** A public
-  "@partylinepager tor" is ignored: the reply carries an onion
+  "@party-line-pager tor" is ignored: the reply carries an onion
   address and a shared secret, and a reply to a public toot is
   a public toot. Every reply the bot sends is direct visibility.
 - Polling, not webhooks: the adapter polls
@@ -34,7 +34,7 @@ poll_interval = "30s"
   between sending a command and anything happening. 30 seconds
   is polite to somebody else's instance; on your own, go lower.
 - The adapter identifies itself with a `User-Agent` naming
-  PartylinePager. An instance that filters anonymous clients
+  PartyLinePager. An instance that filters anonymous clients
   rejects the request before looking at the token.
   GoToSocial answers empty `User-Agent` with
   `418 I'm a teapot`.

@@ -42,7 +42,7 @@ your own roster. See `.env.example`.
 
 ```sh
 docker compose down
-tar czf partylinepager.tar.gz \
+tar czf party-line-pager.tar.gz \
     --exclude=./.cache --exclude=./target \
     --exclude=./.git .
 # copy to new host, unpack, then:
@@ -51,7 +51,7 @@ printf 'HOST_UID=%s\nHOST_GID=%s\nDOCKER_GID=%s\n' \
     "$(getent group docker | cut -d: -f3)"
 # update .env with the output above
 docker compose up -d
-docker compose exec partylinepagerd partylinepagerctl who
+docker compose exec party-line-pagerd party-line-pagerctl who
 ```
 
 The two excludes are build caches. The `.env` UIDs are the only
@@ -64,7 +64,7 @@ Nothing else is left behind except rebuildable Docker images.
 
 A subscriber **is an address on a service**. There is no person
 model and no account linking: `telegram:123` and
-`email:partylinepager@example.org` are two unrelated subscribers even if
+`email:party-line-pager@example.org` are two unrelated subscribers even if
 the same human owns both. They get two quotas. Policing that is
 the admin's job. There is no way to verify a human identity
 across networks, and pretending otherwise would be theatre.

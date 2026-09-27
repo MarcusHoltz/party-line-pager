@@ -8,6 +8,6 @@
 # Nothing here starts a server.
 
 services:
-  partylinepagerd:
+  party-line-pagerd:
     environment:
       IRC_PASSWORD: "${IRC_PASSWORD:-}"

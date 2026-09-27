@@ -1,6 +1,6 @@
 # Email
 
-Endpoint format: `email:partylinepager@example.org` (case-folded).
+Endpoint format: `email:party-line-pager@example.org` (case-folded).
 
 The universal fallback: anybody on any service can drive the
 bot from a mail client.
@@ -14,15 +14,15 @@ Any mailbox the bot can read over IMAP and send from over SMTP:
 enabled = true
 imap_host = "imap.example.org"
 imap_port = 993
-imap_user = "partylinepager@example.org"
+imap_user = "party-line-pager@example.org"
 imap_password = "env:IMAP_PASSWORD"
 mailbox = "INBOX"
 
 smtp_host = "smtp.example.org"
 smtp_port = 587
-smtp_user = "partylinepager@example.org"
+smtp_user = "party-line-pager@example.org"
 smtp_password = "env:SMTP_PASSWORD"
-from = "partylinepager@example.org"
+from = "party-line-pager@example.org"
 
 tls = true
 poll_interval = "60s"
@@ -56,8 +56,8 @@ cannot be re-read forever.
 
 ## Behavior
 
-- Addresses are case-folded: `PartylinePager@Example.ORG` and
-  `partylinepager@example.org` are one subscriber.
+- Addresses are case-folded: `PartyLinePager@Example.ORG` and
+  `party-line-pager@example.org` are one subscriber.
 - The broadcast subject line comes from the room's title.
 - A command may appear on any of the first five non-empty
   lines, so a `Re:` subject and quoted reply still parse.

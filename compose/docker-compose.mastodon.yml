@@ -5,6 +5,6 @@
 # Needs `[mastodon]` in adapters.toml and MASTODON_TOKEN in .env.
 
 services:
-  partylinepagerd:
+  party-line-pagerd:
     environment:
       MASTODON_TOKEN: "${MASTODON_TOKEN:-}"

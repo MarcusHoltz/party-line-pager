@@ -138,7 +138,7 @@ docker compose -f docker-compose.yml \
   -f compose/docker-compose.irc.yml up -d
 ```
 
-`./partylinepager.sh` needs none of this. It derives the list
+`./party-line-pager.sh` needs none of this. It derives the list
 from `policy.toml` and `adapters.toml`, passes it on every
 command, and rewrites `COMPOSE_FILE` whenever you switch an
 adapter on or off.
@@ -182,6 +182,6 @@ Without `compose/docker-compose.apprise.yml`, the daemon still starts
 and every native adapter works. Only `apprise:` endpoints
 (admin-added) fail their delivery and say so.
 
-`partylinepager.sh` includes it unconditionally: an admin can
+`party-line-pager.sh` includes it unconditionally: an admin can
 add one at any moment, and a sidecar that is not running turns
 that into a failure nobody was expecting.

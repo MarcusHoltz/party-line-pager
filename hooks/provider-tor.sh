@@ -1,12 +1,12 @@
 #!/bin/sh
-# PartylinePager provider hook: bring up a tor-party-line relay and print its onion.
+# PartyLinePager provider hook: bring up a tor-party-line relay and print its onion.
 #
-# Contract with partylinepagerd:
+# Contract with party-line-pagerd:
 #   stdin  the shared secret, one line. Never argv, never the environment,
 #          because /proc/<pid>/cmdline and /proc/<pid>/environ are readable by
 #          any process running as the same user.
-#   env    PARTYLINEPAGER_TTL_SECS  how long the room is meant to live
-#          PARTYLINEPAGER_NOTE      the host's one-line note, may be empty
+#   env    PARTY_LINE_PAGER_TTL_SECS  how long the room is meant to live
+#          PARTY_LINE_PAGER_NOTE      the host's one-line note, may be empty
 #   stdout exactly one JSON object: {"address":"...onion"}
 #          Anything else printed on stdout is ignored as long as the JSON object
 #          is the last line starting with '{'. Log to stderr freely.
@@ -76,7 +76,7 @@ done
 
 ONION="$("$PLR" exec "$TOR_PARTYLINE_DIR" "$COMPOSE_SERVICE" \
     sh -c 'cat /var/lib/tor/hidden_service/hostname' | tr -d ' \t\r\n')"
-log "up at $ONION after ${waited}s (ttl ${PARTYLINEPAGER_TTL_SECS:-unset}s)"
+log "up at $ONION after ${waited}s (ttl ${PARTY_LINE_PAGER_TTL_SECS:-unset}s)"
 
 # No port travels with the address: tor-party-line.sh accepts only a bare .onion,
 # and a pasted "onion:port" breaks its normalization instead of being ignored.

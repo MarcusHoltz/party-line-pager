@@ -1,13 +1,13 @@
 #!/bin/sh
-# PartylinePager teardown hook: stop the tor-party-line relay.
+# PartyLinePager teardown hook: stop the tor-party-line relay.
 #
-# Contract with partylinepagerd:
-#   env    PARTYLINEPAGER_ROOM_ID  the address that is being retired
+# Contract with party-line-pagerd:
+#   env    PARTY_LINE_PAGER_ROOM_ID  the address that is being retired
 #   exit   non-zero is logged and otherwise ignored. The daemon forgets the room
 #          either way, because a container that will not die must not block the
 #          next signal.
 #
-# Runs when the room's TTL expires, when an admin runs `partylinepagerctl close`, and
+# Runs when the room's TTL expires, when an admin runs `party-line-pagerctl close`, and
 # at startup if a room outlived the daemon.
 
 set -eu
@@ -24,7 +24,7 @@ WIPE_ONION="${WIPE_ONION:-1}"
 
 log() { echo "teardown-tor: $*" >&2; }
 
-log "closing ${PARTYLINEPAGER_ROOM_ID:-unknown}"
+log "closing ${PARTY_LINE_PAGER_ROOM_ID:-unknown}"
 
 if [ ! -d "$TOR_PARTYLINE_DIR" ]; then
     log "TOR_PARTYLINE_DIR $TOR_PARTYLINE_DIR does not exist, nothing to stop"

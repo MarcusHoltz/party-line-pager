@@ -1,11 +1,11 @@
 manifestVersion: 1
-id: partylinepager
+id: party-line-pager
 category: networking
-name: PartylinePager
+name: PartyLinePager
 version: "1.0.0"
 tagline: Multi-protocol room pager with Tor, I2P, and Reticulum
 description: >-
-  PartylinePager opens a room on one chat network, and everyone who
+  PartyLinePager opens a room on one chat network, and everyone who
   subscribed on any chat network gets a way into it. Supports Tor,
   I2P, and Reticulum party lines with Telegram, Discord, Matrix,
   IRC, XMPP, Mastodon, Mattermost, Signal, and Email adapters.
@@ -23,10 +23,10 @@ releaseNotes: >-
   Initial release with support for nine chat network adapters and
   three anonymous transport protocols (Tor, I2P, Reticulum).
 developer: MarcusHoltz
-website: https://github.com/MarcusHoltz/PartylinePager
+website: https://github.com/MarcusHoltz/PartyLinePager
 dependencies: []
-repo: https://github.com/MarcusHoltz/PartylinePager
-support: https://github.com/MarcusHoltz/PartylinePager/discussions
+repo: https://github.com/MarcusHoltz/PartyLinePager
+support: https://github.com/MarcusHoltz/PartyLinePager/discussions
 port: 7681
 gallery: []
 path: ""

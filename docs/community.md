@@ -4,27 +4,27 @@
 
 **GitHub Discussions**
 :   Questions, ideas, and show-and-tell.
-    [github.com/MarcusHoltz/PartylinePager/discussions](https://github.com/MarcusHoltz/PartylinePager/discussions)
+    [github.com/MarcusHoltz/PartyLinePager/discussions](https://github.com/MarcusHoltz/PartyLinePager/discussions)
 
 **Unraid Support Thread**
 :   Unraid-specific setup help and troubleshooting.
-    [forums.unraid.net](https://forums.unraid.net/topic/XXXXX-partylinepager/)
+    [forums.unraid.net](https://forums.unraid.net/topic/XXXXX-party-line-pager/)
 
 **Issue Tracker**
 :   Bug reports and feature requests.
-    [github.com/MarcusHoltz/PartylinePager/issues](https://github.com/MarcusHoltz/PartylinePager/issues)
+    [github.com/MarcusHoltz/PartyLinePager/issues](https://github.com/MarcusHoltz/PartyLinePager/issues)
 
 ## App Stores
 
-PartylinePager is available through these platforms:
+PartyLinePager is available through these platforms:
 
-- **Unraid** Community Applications (search "PartylinePager")
+- **Unraid** Community Applications (search "PartyLinePager")
 - **Portainer** app templates
 - **TrueNAS** community app catalog
 - **CasaOS** app store
 - **Umbrel** app store
 - **Cosmos Cloud** app store
-- **Docker Hub**: [marcusholtz/partylinepager-full](https://hub.docker.com/r/marcusholtz/partylinepager-full)
+- **Docker Hub**: [marcusholtz/party-line-pager-full](https://hub.docker.com/r/marcusholtz/party-line-pager-full)
 
 ## Related Projects
 

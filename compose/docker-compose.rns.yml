@@ -28,7 +28,7 @@
 #   git clone https://gitlab.com/MarcusHoltz/reticulum-party-line.git party-lines/reticulum-party-line
 
 services:
-  partylinepagerd:
+  party-line-pagerd:
     environment:
       # Its own variable, not TOR_PARTYLINE_DIR. See compose/docker-compose.i2p.yml.
       RETICULUM_PARTYLINE_DIR: "${RETICULUM_PARTYLINE_DIR:-${PWD}/transports/reticulum-party-line}"

@@ -1,4 +1,4 @@
-# PartylinePager for TrueNAS
+# PartyLinePager for TrueNAS
 
 Multi-protocol room pager with Tor, I2P, and Reticulum party
 lines across nine chat network adapters.
@@ -14,5 +14,5 @@ can be passed as additional environment variables.
 
 ## Links
 
-- [GitHub](https://github.com/MarcusHoltz/PartylinePager)
-- [Docker Hub](https://hub.docker.com/r/marcusholtz/partylinepager-full)
+- [GitHub](https://github.com/MarcusHoltz/PartyLinePager)
+- [Docker Hub](https://hub.docker.com/r/marcusholtz/party-line-pager-full)

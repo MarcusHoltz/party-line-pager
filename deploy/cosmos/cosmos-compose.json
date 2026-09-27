@@ -3,7 +3,7 @@
   "minVersion": "0.9.0",
   "services": {
     "{ServiceName}": {
-      "image": "marcusholtz/partylinepager-full:latest",
+      "image": "marcusholtz/party-line-pager-full:latest",
       "container_name": "{ServiceName}",
       "restart": "unless-stopped",
       "environment": [
@@ -17,10 +17,10 @@
         "MATRIX_HOMESERVER=",
         "MATRIX_USER=",
         "MATRIX_PASSWORD=",
-        "MATRIX_STORE_PATH=/var/lib/partylinepager/matrix",
+        "MATRIX_STORE_PATH=/var/lib/party-line-pager/matrix",
         "IRC_SERVER=",
         "IRC_PORT=6697",
-        "IRC_NICK=partylinepager",
+        "IRC_NICK=party-line-pager",
         "IRC_TLS=true",
         "IRC_CHANNEL=",
         "IRC_ACCOUNT=",

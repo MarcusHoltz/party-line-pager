@@ -1,7 +1,7 @@
 images:
   image:
-    repository: marcusholtz/partylinepager-full
+    repository: marcusholtz/party-line-pager-full
     tag: latest
 consts:
-  partylinepager_container_name: partylinepager
+  party_line_pager_container_name: party-line-pager
   base_config_path: /config

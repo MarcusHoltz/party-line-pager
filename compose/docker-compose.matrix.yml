@@ -15,12 +15,12 @@
 #   mkdir -p config/matrix-store
 #
 # Docker creates a missing bind-mount source as root, and this
-# container runs as you. `./partylinepager.sh` does the mkdir for
+# container runs as you. `./party-line-pager.sh` does the mkdir for
 # you when [matrix] is switched on.
 
 services:
-  partylinepagerd:
+  party-line-pagerd:
     environment:
       MATRIX_PASSWORD: "${MATRIX_PASSWORD:-}"
     volumes:
-      - ../config/matrix-store:/var/lib/partylinepager/matrix
+      - ../config/matrix-store:/var/lib/party-line-pager/matrix

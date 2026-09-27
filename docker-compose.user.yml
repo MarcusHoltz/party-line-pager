@@ -1,4 +1,4 @@
-# PartylinePager V2 — pre-built image, no local compilation.
+# PartyLinePager V2 — pre-built image, no local compilation.
 #
 # Use this instead of docker-compose.yml when you want to pull a published
 # image from Docker Hub rather than building from source. Everything else
@@ -14,16 +14,16 @@
 #   COMPOSE_FILE=docker-compose.user.yml:compose/docker-compose.telegram.yml:compose/docker-compose.docker-socket.yml:compose/docker-compose.tor.yml
 
 services:
-  partylinepagerd:
-    image: marcusholtz/partylinepager:latest
+  party-line-pagerd:
+    image: marcusholtz/party-line-pager:latest
     restart: unless-stopped
     user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     environment:
       RUST_LOG: "info"
-    command: ["--state", "/etc/partylinepager/state"]
+    command: ["--state", "/etc/party-line-pager/state"]
     volumes:
       # Config and state live under the same mount. Config files (policy.toml,
       # adapters.toml) are read-only to the daemon; the state/ subdirectory is
       # created by the daemon on first run via create_dir_all. One mount means
       # no empty directories to ship or pre-create.
-      - ./config:/etc/partylinepager
+      - ./config:/etc/party-line-pager

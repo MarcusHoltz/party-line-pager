@@ -27,7 +27,7 @@ the wrong network's compose file is caught by validation.
 | | Party lines (`tor`, `i2p`, `rns`) | `web` |
 |---|---|---|
 | stdin | The shared secret, one line. | Closed immediately. |
-| env | `PARTYLINEPAGER_TTL_SECS`, `PARTYLINEPAGER_NOTE` | `PARTYLINEPAGER_WEB_BASE_URL`, `PARTYLINEPAGER_WEB_PATH`, `PARTYLINEPAGER_WEB_STATIC_SLUG`, `PARTYLINEPAGER_TTL_SECS`, `PARTYLINEPAGER_NOTE` |
+| env | `PARTY_LINE_PAGER_TTL_SECS`, `PARTY_LINE_PAGER_NOTE` | `PARTY_LINE_PAGER_WEB_BASE_URL`, `PARTY_LINE_PAGER_WEB_PATH`, `PARTY_LINE_PAGER_WEB_STATIC_SLUG`, `PARTY_LINE_PAGER_TTL_SECS`, `PARTY_LINE_PAGER_NOTE` |
 | stdout | `{"address":"...","ttl_secs":7200}` | `{"url":"...","ttl_secs":7200}` |
 | exit | Non-zero = room didn't come up. The daemon tells the host, sends nothing to the roster, and **does not spend quota**. | Same. |
 
@@ -40,7 +40,7 @@ normalization.
 
 ### Down hook contract
 
-Receives `PARTYLINEPAGER_ROOM_ID` (the address for a party
+Receives `PARTY_LINE_PAGER_ROOM_ID` (the address for a party
 line, the room URL for web). Non-zero exit is logged and
 otherwise ignored: a container that won't die must not block
 the next room.
@@ -112,7 +112,7 @@ debian-tor` inside the container).
 | `I2P_DATA_DIR` | `/data/.partyline` | State dir inside container |
 | `I2P_WIPE_KEY` | `1` | Discard destination key first |
 | `I2P_BOOTSTRAP_TIMEOUT` | `240` | Seconds to wait for reachability |
-| `I2P_RELAY_OVERRIDE` | `/opt/partylinepager/hooks/i2p-relay.override.yml` | Compose overlay dropping `/dev/snd` and audio socket |
+| `I2P_RELAY_OVERRIDE` | `/opt/party-line-pager/hooks/i2p-relay.override.yml` | Compose overlay dropping `/dev/snd` and audio socket |
 
 Readiness is **not** the address file. i2pd writes an address
 when the key exists, but the destination is not callable until
@@ -166,7 +166,7 @@ Reticulum, where it would be overtaken by the broadcast.
 `hooks/provider-web.sh` and `hooks/teardown-web.sh` are
 deliberately trivial.
 
-Unless `PARTYLINEPAGER_WEB_STATIC_SLUG` is set, the up hook
+Unless `PARTY_LINE_PAGER_WEB_STATIC_SLUG` is set, the up hook
 reads 20 bytes from `/dev/urandom`, hex-encodes them, and
 prints `{"url":"<base_url>/<path>/<40 hex chars>"}`. 160 bits
 from the OS CSPRNG.
@@ -183,9 +183,9 @@ The broadcast says so.
 `hooks/plp-runtime.sh` abstracts transport lifecycle across two
 modes:
 
-- **`PARTYLINEPAGER_RUNTIME=compose`** (default, Standard):
+- **`PARTY_LINE_PAGER_RUNTIME=compose`** (default, Standard):
   passthrough to `docker compose`
-- **`PARTYLINEPAGER_RUNTIME=direct`** (Full image): local
+- **`PARTY_LINE_PAGER_RUNTIME=direct`** (Full image): local
   process management via PID files under
   `$PLP_PID_DIR` (default `/var/run/plp`)
 

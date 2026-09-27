@@ -3,7 +3,7 @@
 #   docker compose -f docker-compose.yml -f compose/docker-compose.apprise.yml up -d
 #
 # Only needed if the roster holds `apprise:` endpoints, which only an admin can
-# add (`partylinepagerctl add apprise:ntfy://ntfy.sh/partylinepager`). Without this file
+# add (`party-line-pagerctl add apprise:ntfy://ntfy.sh/party-line-pager`). Without this file
 # the daemon still starts and every native adapter still works; an `apprise:`
 # endpoint simply fails its delivery and says so.
 #
@@ -12,7 +12,7 @@
 # policy.toml.
 
 services:
-  partylinepagerd:
+  party-line-pagerd:
     depends_on:
       - apprise
 
