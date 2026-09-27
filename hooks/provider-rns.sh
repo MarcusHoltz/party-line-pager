@@ -16,7 +16,7 @@
 #
 # The secret is read and discarded on purpose, same as the other party lines:
 # "The relay operator does NOT need a shared secret"
-# (reticulum-party-line/partyline.sh, relay_mode). The reflector fans out
+# (reticulum-party-line/rns-party-line.sh, relay_mode). The reflector fans out
 # ciphertext it has no key for.
 #
 # Reticulum is NOT onion routing. The reflector sees every caller's IP address
@@ -37,7 +37,7 @@ PARTYLINE_DIR="${RETICULUM_PARTYLINE_DIR:-/opt/reticulum-party-line}"
 # no-op and the profile has to be named on every call.
 COMPOSE_PROFILE="${RETICULUM_COMPOSE_PROFILE:-reflector}"
 COMPOSE_SERVICE="${RETICULUM_COMPOSE_SERVICE:-reflector}"
-# Where partyline.sh keeps its persistent state inside the container. Only the
+# Where rns-party-line.sh keeps its persistent state inside the container. Only the
 # identity and the address it derives live here; RNS's own storage is on tmpfs.
 DATA_DIR="${RETICULUM_DATA_DIR:-/app/data}"
 # The uid the image runs as (Dockerfile: USER partyline). Bind-mount sources
@@ -70,7 +70,7 @@ fi
 
 # The compose file declares a file-backed secret. Compose refuses to start at
 # all if the host-side file is missing, so make sure one exists. Empty is the
-# correct content: partyline.sh reads an absent or empty file as "no secret
+# correct content: rns-party-line.sh reads an absent or empty file as "no secret
 # set", which is exactly what a relay wants.
 mkdir -p "$PARTYLINE_DIR/secrets"
 [ -e "$PARTYLINE_DIR/secrets/shared_secret.txt" ] || \

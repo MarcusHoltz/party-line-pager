@@ -48,7 +48,7 @@ const MAX_SLUG_LEN: usize = 200;
 /// [`Transport::validate`] rather than believed.
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 pub struct PartylineOutput {
-    /// The address joiners dial. No port travels with it: `partyline.sh`
+    /// The address joiners dial. No port travels with it: the transport script
     /// accepts only a bare address on all three networks.
     pub address: String,
     /// Optional override for how long the room should live. Lets a backend that

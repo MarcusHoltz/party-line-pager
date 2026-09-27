@@ -89,7 +89,9 @@ docker compose exec partylinepagerd \
 The first build compiles the whole Rust dependency tree in
 release mode (matrix-sdk, the TLS stack, etc.), which takes
 over 20 minutes on ordinary hardware without a warmed build
-cache.
+cache. Peak memory stays under ~8.5 GB (the Dockerfiles cap
+parallel compilation to 2 jobs). Machines with less than 8 GB
+of RAM available to Docker may need `CARGO_BUILD_JOBS=1`.
 
 The Dockerfile compiles dependencies against stub sources
 first, in their own layer keyed only on `Cargo.toml` files, so
@@ -98,6 +100,8 @@ recompile. Expect a few minutes instead of from scratch.
 
 If the build looks stalled, `docker stats` will show a build
 container pegging CPU, which means it is working, not hung.
+If the build exits with code 137, it ran out of memory. See
+[Troubleshooting](../troubleshooting.md).
 
 ## Next steps
 

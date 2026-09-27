@@ -35,4 +35,4 @@ services:
       REFLECTOR_PORT: "4242"
       SHARED_SECRET_FILE: /run/secrets/shared_secret.txt
       TERM: "xterm"
-    command: ["bash", "/app/src/partyline.sh", "relay"]
+    command: ["bash", "/app/src/rns-party-line.sh", "relay"]

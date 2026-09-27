@@ -78,6 +78,6 @@ ONION="$("$PLR" exec "$TOR_PARTYLINE_DIR" "$COMPOSE_SERVICE" \
     sh -c 'cat /var/lib/tor/hidden_service/hostname' | tr -d ' \t\r\n')"
 log "up at $ONION after ${waited}s (ttl ${PARTYLINEPAGER_TTL_SECS:-unset}s)"
 
-# No port travels with the address: partyline.sh accepts only a bare .onion,
+# No port travels with the address: tor-party-line.sh accepts only a bare .onion,
 # and a pasted "onion:port" breaks its normalization instead of being ignored.
 printf '{"address":"%s"}\n' "$ONION"

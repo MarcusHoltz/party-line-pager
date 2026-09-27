@@ -84,7 +84,7 @@ room does.
 ### Party line clients
 
 Each party line needs its own build of the client.
-`partyline.sh` from `tor-party-line` dials onions, the
+The transport script from `tor-party-line` dials onions, the
 `i2p-party-line` build dials `.b32.i2p` addresses, and the
 `reticulum-party-line` build dials destination hashes. Every
 broadcast carries the link for the one that room needs.

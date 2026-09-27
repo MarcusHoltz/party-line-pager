@@ -57,7 +57,7 @@ single relay-only `docker-compose.yml` that pulls the published
 image from Docker Hub. No checkout, no audio, no build context.
 Each sets `command: ["relay"]` so the upstream entrypoint enters
 relay mode directly. Without this, `docker compose up -d` hangs:
-partyline.sh blocks on a confirmation prompt because `stdin_open`
+the transport script blocks on a confirmation prompt because `stdin_open`
 keeps stdin as an open pipe with no writer.
 Runtime state (`data/`, `secrets/`) lands in these directories
 too (gitignored), which is why they live outside `compose/`.

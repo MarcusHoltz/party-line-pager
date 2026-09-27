@@ -34,7 +34,7 @@ the wrong network's compose file is caught by validation.
 `ttl_secs` in the response is optional; the daemon uses
 `room_ttl` from policy if absent.
 
-**No port travels with an address.** `partyline.sh` accepts
+**No port travels with an address.** The transport script accepts
 only a bare address, and a pasted `address:port` breaks its
 normalization.
 
@@ -117,13 +117,13 @@ debian-tor` inside the container).
 Readiness is **not** the address file. i2pd writes an address
 when the key exists, but the destination is not callable until
 its LeaseSet reaches the floodfills. The hook waits for
-`partyline.sh` to log `I2P destination active`, which it prints
+the transport script to log `I2P destination active`, which it prints
 only after self-dialling through its own SOCKS proxy. This is a
 string match on human-facing output and the most fragile thing
 in these hooks.
 
 The transport compose file must set `command: ["relay"]`.
-Without it, partyline.sh blocks on a confirmation prompt when
+Without it, the transport script blocks on a confirmation prompt when
 run detached (`docker compose up -d`), i2pd starts in the
 background but the readiness check never executes, and the
 hook times out. Measured bootstrap: 18-53s on a warm NetDb.

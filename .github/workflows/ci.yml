@@ -62,6 +62,13 @@ jobs:
             /opt/ghc /usr/local/share/powershell /usr/local/share/chromium
           df -h /
 
+      - name: Create swap
+        run: |
+          sudo fallocate -l 4G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Match container UID to runner
@@ -125,6 +132,13 @@ jobs:
             /opt/ghc /usr/local/share/powershell /usr/local/share/chromium
           df -h /
 
+      - name: Create swap
+        run: |
+          sudo fallocate -l 4G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Match container UID to runner
@@ -186,6 +200,13 @@ jobs:
           sudo rm -rf /usr/local/lib/android /usr/share/dotnet \
             /opt/ghc /usr/local/share/powershell /usr/local/share/chromium
 
+      - name: Create swap
+        run: |
+          sudo fallocate -l 4G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Docker Buildx
@@ -225,6 +246,13 @@ jobs:
         run: |
           sudo rm -rf /usr/local/lib/android /usr/share/dotnet \
             /opt/ghc /usr/local/share/powershell /usr/local/share/chromium
+
+      - name: Create swap
+        run: |
+          sudo fallocate -l 4G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 

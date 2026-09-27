@@ -101,7 +101,9 @@ A menu comes up. Work down it, and it writes `config/policy.toml`,
 requirements are actually met.
 
 Two numbers to expect: **about five minutes** of configuration, then a
-**20+ minute first build** you can walk away from.
+**20+ minute first build** you can walk away from. The build needs
+roughly 8 GB of RAM available to Docker; machines with less may
+need `CARGO_BUILD_JOBS=1` in the Dockerfile.
 
 The same script is the admin console afterwards, so `./partylinepager.sh` is the only
 command worth memorising. Everything it does is a `docker compose` or

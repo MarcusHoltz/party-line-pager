@@ -1,5 +1,5 @@
 # Build stage.
-FROM rust:1.98.1-slim-trixie@sha256:ce84a5edd80c5f91e05c5533b1e53eb1da54028f33734dc06aa6b49fa190462d AS build
+FROM rust:1.98.1-slim-trixie AS build
 WORKDIR /src
 
 # System libraries needed by the TLS and Matrix stacks.
@@ -12,7 +12,7 @@ WORKDIR /src
 # src/advisories/helpers/db.rs routes both settings through the same
 # git-CLI path. Build stage only, so it never reaches the runtime image.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends pkg-config libssl-dev git \
+ && apt-get install -y --no-install-recommends pkg-config libssl-dev git cmake \
  && rm -rf /var/lib/apt/lists/*
 
 COPY Cargo.toml Cargo.lock ./
@@ -25,6 +25,10 @@ COPY crates/partylinepagerctl/Cargo.toml crates/partylinepagerctl/Cargo.toml
 # buildx on this host there is no --mount=type=cache, so the layer cache is
 # the only thing standing between a one-line edit and a from-scratch release
 # build of the whole dependency tree.
+ARG CARGO_BUILD_JOBS=2
+ENV CARGO_BUILD_JOBS=${CARGO_BUILD_JOBS}
+ARG CMAKE_BUILD_PARALLEL_LEVEL=2
+ENV CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL}
 RUN mkdir -p crates/partylinepager-core/src crates/partylinepagerd/src crates/partylinepagerctl/src \
  && echo "" > crates/partylinepager-core/src/lib.rs \
  && echo "" > crates/partylinepagerd/src/lib.rs \
@@ -52,7 +56,7 @@ RUN find crates -name '*.rs' -exec touch {} + \
 # `@v14.8.0` fails to resolve no matter how it's spelled. A tag-scoped clone
 # sidesteps Go's module versioning entirely and pins to the exact same
 # human-readable tag GitHub's release list and the check script both use.
-FROM golang:1.27.1-bookworm@sha256:648f440f42a0958804efb24df176f806f9d353b41f1c0627f666428e40310f6b AS yopass-build
+FROM golang:1.27.1-bookworm AS yopass-build
 ARG YOPASS_VERSION=14.9.0
 RUN git clone --depth 1 --branch "${YOPASS_VERSION}" \
         https://github.com/jhaals/yopass.git /src/yopass \
@@ -61,16 +65,19 @@ RUN git clone --depth 1 --branch "${YOPASS_VERSION}" \
 
 # The Docker CLI and its compose plugin come from the official image rather than
 # from Debian, which packages neither under a stable name.
-FROM docker:29.8.0-cli@sha256:eccaacfeed644c7de222ff047483568cb988dde95476fbaaf10ea2d04921bb66 AS dockercli
+FROM docker:29.8.0-cli AS dockercli
 
 # Runtime stage.
 #
 # The Docker CLI is here because the provider hooks drive it. That is also why
 # this container is handed the Docker socket, which is equivalent to root on the
 # host: see the security section of the README.
-FROM debian:trixie-20260824-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132
+FROM debian:trixie-slim
 RUN apt-get update \
+ && apt-get upgrade -y \
  && apt-get install -y --no-install-recommends ca-certificates tini \
+ && apt-get autoremove -y \
+ && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=dockercli /usr/local/bin/docker /usr/local/bin/docker

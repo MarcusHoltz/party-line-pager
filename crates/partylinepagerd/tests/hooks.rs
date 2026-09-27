@@ -290,7 +290,7 @@ fn the_tor_provider_prints_an_address_the_daemon_accepts() {
 
 #[test]
 fn no_port_travels_with_any_address() {
-    // partyline.sh accepts only a bare address on all three networks, and a
+    // the transport script accepts only a bare address on all three networks, and a
     // pasted "address:port" breaks its normalization instead of being ignored.
     for (hook, behaviour) in [
         ("provider-tor.sh", tor_publishes()),
@@ -462,7 +462,7 @@ fn the_reticulum_provider_names_its_compose_profile() {
 fn the_reticulum_provider_creates_the_secret_file_compose_demands() {
     // The compose file declares a file-backed secret, and compose refuses to
     // start at all when the host-side file is missing. Empty is correct: a
-    // relay needs no secret, and partyline.sh reads an empty file as "unset".
+    // relay needs no secret, and the transport script reads an empty file as "unset".
     let h = Harness::new(&reticulum_publishes());
     h.run("provider-rns.sh", Some("s"));
 

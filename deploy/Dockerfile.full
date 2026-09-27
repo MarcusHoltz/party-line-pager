@@ -13,11 +13,11 @@
 #   --build-arg RNS_REF=v1.0.0
 
 # ── Stage 1: Rust binaries ───────────────────────────────────────────
-FROM rust:1.98.1-slim-trixie@sha256:ce84a5edd80c5f91e05c5533b1e53eb1da54028f33734dc06aa6b49fa190462d AS build
+FROM rust:1.98.1-slim-trixie AS build
 WORKDIR /src
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends pkg-config libssl-dev git \
+ && apt-get install -y --no-install-recommends pkg-config libssl-dev git cmake \
  && rm -rf /var/lib/apt/lists/*
 
 COPY Cargo.toml Cargo.lock ./
@@ -27,6 +27,10 @@ COPY crates/partylinepagerctl/Cargo.toml crates/partylinepagerctl/Cargo.toml
 
 # Dep-cache layer: build once against stubs so this layer caches every
 # dependency. Without buildx there is no --mount=type=cache.
+ARG CARGO_BUILD_JOBS=2
+ENV CARGO_BUILD_JOBS=${CARGO_BUILD_JOBS}
+ARG CMAKE_BUILD_PARALLEL_LEVEL=2
+ENV CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL}
 RUN mkdir -p crates/partylinepager-core/src crates/partylinepagerd/src crates/partylinepagerctl/src \
  && echo "" > crates/partylinepager-core/src/lib.rs \
  && echo "" > crates/partylinepagerd/src/lib.rs \
@@ -39,7 +43,7 @@ RUN find crates -name '*.rs' -exec touch {} + \
  && cargo build --release --workspace --bins
 
 # ── Stage 2: Yopass CLI ──────────────────────────────────────────────
-FROM golang:1.27.1-bookworm@sha256:648f440f42a0958804efb24df176f806f9d353b41f1c0627f666428e40310f6b AS yopass-build
+FROM golang:1.27.1-bookworm AS yopass-build
 ARG YOPASS_VERSION=14.9.0
 RUN git clone --depth 1 --branch "${YOPASS_VERSION}" \
         https://github.com/jhaals/yopass.git /src/yopass \
@@ -47,7 +51,7 @@ RUN git clone --depth 1 --branch "${YOPASS_VERSION}" \
  && go build -o /go/bin/yopass ./cmd/yopass
 
 # ── Stage 3: mkp224o (vanity .onion generator) ───────────────────────
-FROM debian:bookworm-20260824-slim@sha256:88200866dfff7ea7f5cbcb6ec7c8a701889efe6fe859fe64d6990e4b07ea4171 AS mkp224o-builder
+FROM debian:trixie-slim AS mkp224o-builder
 ARG MKP224O_REF=5172c0fd71740ca0b11da8149a2575dcf331d7ab
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates gcc libc6-dev make autoconf automake \
@@ -59,7 +63,7 @@ RUN git clone https://github.com/cathugger/mkp224o.git /tmp/mkp224o \
     && ./autogen.sh && ./configure && make
 
 # ── Stage 4: party-line repos ────────────────────────────────────────
-FROM alpine/git:v2.54.0@sha256:0b5f57d22181e8b8fbe8ac5ca8754faa0d577f101b9857418f1acc43955ad464 AS party-lines
+FROM alpine/git:v2.54.0 AS party-lines
 ARG TOR_REPO=https://gitlab.com/MarcusHoltz/tor-party-line.git
 ARG TOR_REF=main
 ARG I2P_REPO=https://gitlab.com/MarcusHoltz/i2p-party-line.git
@@ -71,7 +75,7 @@ RUN git clone --depth 1 --branch "$TOR_REF" "$TOR_REPO" /opt/tor-party-line \
  && git clone --depth 1 --branch "$RNS_REF" "$RNS_REPO" /opt/reticulum-party-line
 
 # ── Stage 5: ttyd static binary ──────────────────────────────────────
-FROM debian:trixie-20260824-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132 AS ttyd-fetch
+FROM debian:trixie-slim AS ttyd-fetch
 ARG TTYD_VERSION=1.7.7
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
@@ -87,13 +91,13 @@ RUN ARCH="$(uname -m)" \
     && chmod +x /usr/local/bin/ttyd
 
 # ── Stage 6: signal-cli-rest-api ─────────────────────────────────────
-FROM bbernhard/signal-cli-rest-api:0.100@sha256:2399d449123cdad56c4d859277e3b9127e1a00c4d2ab4601c239882609286cf8 AS signal-cli
+FROM bbernhard/signal-cli-rest-api:0.100 AS signal-cli
 
 # ── Stage 7: runtime ─────────────────────────────────────────────────
-FROM debian:trixie-20260824-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132
+FROM debian:trixie-slim
 
 # Union of all transport deps + daemon runtime.
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     # common
     ca-certificates curl tini bash \
     # tor
@@ -106,6 +110,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     socat libopus0 openssl \
     qrencode ncurses-bin \
     procps coreutils util-linux \
+    && apt-get autoremove -y \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Reticulum python deps + Apprise for fanout.
@@ -135,11 +141,11 @@ COPY --from=party-lines /opt/tor-party-line /opt/tor-party-line
 COPY --from=party-lines /opt/i2p-party-line /opt/i2p-party-line
 COPY --from=party-lines /opt/reticulum-party-line /opt/reticulum-party-line
 RUN chmod +x /opt/tor-party-line/entrypoint.sh \
-             /opt/tor-party-line/partyline.sh \
-             /opt/i2p-party-line/partyline.sh \
+             /opt/tor-party-line/tor-party-line.sh \
+             /opt/i2p-party-line/i2p-party-line.sh \
              /opt/reticulum-party-line/docker-entrypoint.sh \
-             /opt/reticulum-party-line/partyline.sh \
- && ln -s /opt/tor-party-line/partyline.sh /partyline.sh
+             /opt/reticulum-party-line/rns-party-line.sh \
+ && ln -s /opt/tor-party-line/tor-party-line.sh /tor-party-line.sh
 
 # Hooks, wizard, example configs.
 COPY hooks /opt/partylinepager/hooks

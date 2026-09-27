@@ -22,6 +22,15 @@ The daemon clears it and starts fresh. If a party line was live
 at the time, its provider container may still be running; stop
 it by hand with `docker compose down` in the transport directory.
 
+**Build killed with exit code 137 (OOM)**
+: The Rust build ran out of memory. The C/C++ dependencies
+(`aws-lc-sys`, `ring`, `libsqlite3-sys`) compile native code
+in parallel and can exceed 16 GB of RAM. The Dockerfiles set
+`CARGO_BUILD_JOBS=2` and `CMAKE_BUILD_PARALLEL_LEVEL=2` to cap
+this. If you still hit 137, set both to `1` or increase
+Docker's memory limit. Run `docker stats` during the build to
+watch memory usage.
+
 ## Rooms
 
 **Host gets "warming the line" and nothing else**
@@ -30,7 +39,7 @@ it by hand with `docker compose down` in the transport directory.
 Common causes: checkout dir wrong inside the container, Docker
 socket not mounted, Tor needing longer than
 `BOOTSTRAP_TIMEOUT`, or a transport compose file missing
-`command: ["relay"]` (without it, partyline.sh blocks on a
+`command: ["relay"]` (without it, the transport script blocks on a
 confirmation prompt when run detached).
 
 **Bot ignores `web` (or `tor`) completely**

@@ -222,7 +222,7 @@ pub enum RoomKind {
     ///
     /// One variant for all three networks, because a room is the same thing on
     /// each of them. The port a hook may know about is deliberately not here:
-    /// `partyline.sh` only ever accepts a bare address on all three, and a
+    /// the transport script only ever accepts a bare address on all three, and a
     /// pasted "address:port" breaks its normalization instead of being
     /// ignored.
     Partyline {

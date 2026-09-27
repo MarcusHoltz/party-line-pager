@@ -17,6 +17,9 @@ services:
     build:
       context: ..
       target: build
+      args:
+        CARGO_BUILD_JOBS: "${CARGO_BUILD_JOBS:-2}"
+        CMAKE_BUILD_PARALLEL_LEVEL: "${CMAKE_BUILD_PARALLEL_LEVEL:-2}"
     working_dir: /src
     # Same knob as the daemon, and it matters more here: without it every file
     # cargo writes into ./target and ./.cache belongs to root and you need sudo

@@ -19,6 +19,58 @@ The full image (all transports in one container):
 docker build -f deploy/Dockerfile.full -t partylinepager-full .
 ```
 
+## Build memory requirements
+
+The Rust dependency tree includes several C/C++ libraries
+(`aws-lc-sys`, `ring`, `libsqlite3-sys`) that compile native
+code. Without limits, Cargo spawns parallel jobs per CPU core,
+and each C/C++ sub-build spawns its own parallel `cc`/`cmake`
+jobs. On machines with 16 GB of RAM or less, this can exceed
+available memory and the build gets OOM-killed (exit 137).
+
+Two build args in both Dockerfiles control this:
+
+- `CARGO_BUILD_JOBS` (default `2`) limits how many crates
+  cargo compiles in parallel. The `cc` crate (`ring`,
+  `libsqlite3-sys`) respects this via `NUM_JOBS`.
+- `CMAKE_BUILD_PARALLEL_LEVEL` (default `2`) limits cmake's
+  internal parallelism. `aws-lc-sys` uses cmake and ignores
+  `CARGO_BUILD_JOBS`; without this, cmake uses all CPU cores.
+
+Together at `=2` these keep peak memory under ~8.5 GB. The
+`cmake` package is also installed in the build stage because
+`aws-lc-sys` needs it to build AWS-LC from source.
+
+Both `ring` and `aws-lc-rs` are in the dependency tree (ring
+for `tokio-xmpp` and `irc`; aws-lc-rs as rustls's default
+provider, pulled in by `matrix-sdk`). Neither can be removed
+without dropping a chat adapter or patching upstream.
+
+### Overriding parallelism
+
+Both values are Dockerfile `ARG`s with a default of `2`. You
+can override them at build time without editing the Dockerfile:
+
+```sh
+# Local machine with 16+ GB RAM: use 4 jobs for faster builds
+docker compose build \
+  --build-arg CARGO_BUILD_JOBS=4 \
+  --build-arg CMAKE_BUILD_PARALLEL_LEVEL=4
+
+# Or via shell env (compose files read these from the environment)
+CARGO_BUILD_JOBS=4 CMAKE_BUILD_PARALLEL_LEVEL=4 docker compose build
+```
+
+GitLab CI overrides both to `1` (the `small` runner has only
+8 GB and no swap). GitHub Actions uses the default `2` with a
+4 GB swapfile for linker spikes. GitLab CI runs inside
+`docker:dind` where `swapon` is not available; lowering to
+`1` is the only option there.
+
+If your build exits with code 137, check `docker stats` during
+the next attempt. If memory peaks near 100%, lower both args
+to `1` or increase Docker's memory limit.
+
 ## Running tests
 
 `compose/docker-compose.build-tools.yml` carries a `build-tools`

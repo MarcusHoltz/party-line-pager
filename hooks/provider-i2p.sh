@@ -16,7 +16,7 @@
 #
 # The secret is read and discarded on purpose. A party-line relay is a dumb
 # fan-out that forwards ciphertext it has no key for: "The relay operator does
-# NOT need a shared secret" (i2p-party-line/partyline.sh, relay_mode). Writing
+# NOT need a shared secret" (i2p-party-line/i2p-party-line.sh, relay_mode). Writing
 # it here would leave a plaintext secret on the relay host for the life of the
 # room and buy nothing. The daemon still mints it and still broadcasts it; only
 # the callers ever use it.
@@ -31,7 +31,7 @@ PLR="$HOOKS_DIR/plp-runtime.sh"
 # overlay loaded silently win and point every hook at one checkout.
 PARTYLINE_DIR="${I2P_PARTYLINE_DIR:-/opt/i2p-party-line}"
 COMPOSE_SERVICE="${I2P_COMPOSE_SERVICE:-partyline}"
-# Where partyline.sh keeps its state inside the container (DOCKER_MODE sets
+# Where i2p-party-line.sh keeps its state inside the container (DOCKER_MODE sets
 # DATA_DIR=/data/.partyline). The identity key is the only persistent file.
 DATA_DIR="${I2P_DATA_DIR:-/data/.partyline}"
 # Wiping the key forces i2pd to publish a brand new destination for every
@@ -83,7 +83,7 @@ if [ "$WIPE_KEY" = "1" ]; then
         -c "rm -f '$DATA_DIR/partyline-keys.dat' '$DATA_DIR/address'" >&2
 fi
 
-# partyline.sh picks relay mode when it is in Docker with no TTY, which is
+# i2p-party-line.sh picks relay mode when it is in Docker with no TTY, which is
 # exactly what `up -d` gives it in compose mode. In direct mode the shim
 # pipes stdin from `tail -f /dev/null` to keep I2P's `read -r -t 2` loop
 # from busy-spinning on a closed stdin.
@@ -93,7 +93,7 @@ log "starting the relay"
 # The address file appears as soon as the key exists, which is well BEFORE the
 # destination is callable: i2pd has to build tunnels and publish a LeaseSet to
 # the floodfills first, and a caller who dials early gets a flat "not found"
-# for no visible reason. partyline.sh gates on a self-dial through its own
+# for no visible reason. i2p-party-line.sh gates on a self-dial through its own
 # SOCKS proxy and only then prints this line, so the line is the readiness
 # signal and the file alone is not.
 READY_MARKER='I2P destination active'

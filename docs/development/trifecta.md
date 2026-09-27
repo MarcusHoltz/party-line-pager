@@ -6,9 +6,9 @@ different transport:
 
 | Script | Repository | Transport |
 |---|---|---|
-| `tor-party-line/partyline.sh` | [tor-party-line](https://gitlab.com/MarcusHoltz/tor-party-line) | Tor hidden services |
-| `i2p-party-line/partyline.sh` | [i2p-party-line](https://gitlab.com/MarcusHoltz/i2p-party-line) | I2P garlic routing |
-| `reticulum-party-line/partyline.sh` | [reticulum-party-line](https://gitlab.com/MarcusHoltz/reticulum-party-line) | Reticulum mesh |
+| `tor-party-line/tor-party-line.sh` | [tor-party-line](https://gitlab.com/MarcusHoltz/tor-party-line) | Tor hidden services |
+| `i2p-party-line/i2p-party-line.sh` | [i2p-party-line](https://gitlab.com/MarcusHoltz/i2p-party-line) | I2P garlic routing |
+| `reticulum-party-line/rns-party-line.sh` | [reticulum-party-line](https://gitlab.com/MarcusHoltz/reticulum-party-line) | Reticulum mesh |
 
 ## Shared vs transport-specific code
 
@@ -43,7 +43,7 @@ applies to the others.
 Reticulum has extra files the others lack:
 
 - `rns_bridge.py` (638-line Python transport bridge, embedded
-  as a heredoc in `partyline.sh`)
+  as a heredoc in `rns-party-line.sh`)
 - `tools/embed_bridge.py`
 - `docker-entrypoint.sh`
 - `measure/` directory

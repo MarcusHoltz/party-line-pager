@@ -186,14 +186,15 @@ unit-tests:
     # artifacts without being root.
     - mkdir -p .cache/cargo target
     - chmod 777 .cache .cache/cargo target
-    - docker compose
+    - CARGO_BUILD_JOBS=1 CMAKE_BUILD_PARALLEL_LEVEL=1
+      docker compose
         -f compose/docker-compose.build-tools.yml
         build build-tools
     - docker compose
         -f compose/docker-compose.build-tools.yml
         run --rm -T build-tools
         cargo test --workspace
-  timeout: 40 minutes
+  timeout: 50 minutes
   # Runs on dependency-file MRs (Renovate) and on manual runs
   # unless they are docs-only. Mirrors ci.yml's unit-tests job.
   rules:
@@ -215,11 +216,12 @@ supply-chain-audit:
   script:
     - mkdir -p .cache/cargo target
     - chmod 777 .cache .cache/cargo target
-    - docker compose
+    - CARGO_BUILD_JOBS=1 CMAKE_BUILD_PARALLEL_LEVEL=1
+      docker compose
         -f compose/docker-compose.build-tools.yml
         build build-tools
     - ./hooks/audit-cargo-deps.sh
-  timeout: 30 minutes
+  timeout: 40 minutes
   # Runs on dependency-file MRs and on manual runs unless they are
   # docs-only. Mirrors ci.yml's supply-chain-audit job.
   rules:
@@ -243,8 +245,9 @@ build-compose-image:
   services:
     - docker:29.8.0-dind
   script:
-    - docker compose build
-  timeout: 30 minutes
+    - CARGO_BUILD_JOBS=1 CMAKE_BUILD_PARALLEL_LEVEL=1
+      docker compose build
+  timeout: 45 minutes
   needs: [unit-tests, supply-chain-audit]
   # Same inclusion rules as the test jobs: GitHub ci.yml runs its
   # build jobs on every dispatch/PR, so these are automatic too.
@@ -266,8 +269,11 @@ build-full-image:
   services:
     - docker:29.8.0-dind
   script:
-    - docker build -f deploy/Dockerfile.full -t partylinepager-full .
-  timeout: 45 minutes
+    - docker build -f deploy/Dockerfile.full
+        --build-arg CARGO_BUILD_JOBS=1
+        --build-arg CMAKE_BUILD_PARALLEL_LEVEL=1
+        -t partylinepager-full .
+  timeout: 60 minutes
   needs: [unit-tests, supply-chain-audit]
   # Same inclusion rules as the test jobs (see build-compose-image).
   rules:
@@ -296,7 +302,7 @@ push-registries:
   image: docker:29.8.0
   services:
     - docker:29.8.0-dind
-  timeout: 60 minutes
+  timeout: 90 minutes
   needs: [build-compose-image, build-full-image]
   # Exists only for the "Build & Publish" workflow. The play button
   # is the release trigger itself; nothing pushes by itself.
@@ -349,6 +355,8 @@ push-registries:
 
     # -- Full image --------------------------------------------------------
     - docker build -f deploy/Dockerfile.full
+        --build-arg CARGO_BUILD_JOBS=1
+        --build-arg CMAKE_BUILD_PARALLEL_LEVEL=1
         -t "${FULL_IMAGE_GL}:latest"
         -t "${FULL_IMAGE_GL}:${RELEASE_VERSION}"
         -t "${FULL_IMAGE_DH}:latest"
@@ -368,6 +376,8 @@ push-registries:
 
     # -- Compose image -----------------------------------------------------
     - docker build
+        --build-arg CARGO_BUILD_JOBS=1
+        --build-arg CMAKE_BUILD_PARALLEL_LEVEL=1
         -t "${COMPOSE_IMAGE_GL}:latest"
         -t "${COMPOSE_IMAGE_GL}:${RELEASE_VERSION}"
         -t "${COMPOSE_IMAGE_DH}:latest"

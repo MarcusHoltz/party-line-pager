@@ -71,7 +71,7 @@ pub fn broadcast(
 /// How this room is joined, formatted the same way everywhere it appears.
 ///
 /// A party line shows the address under whatever its network calls one, plus
-/// the shared secret. No port: `partyline.sh` accepts only a bare address on
+/// the shared secret. No port: the transport scripts accept only a bare address on
 /// all three networks, and a pasted "address:port" breaks its normalization
 /// instead of being ignored.
 ///
@@ -596,9 +596,10 @@ fn wiki_topic(topic: &str) -> Option<Doc> {
                 ("Reticulum", "gitlab.com/MarcusHoltz/reticulum-party-line"),
             ])
             .para(
-                "Clone the repo and run partyline.sh. When a room opens, paste the \
-                 address and shared secret from the invite. The script takes care of \
-                 dependencies, audio setup, and encryption.",
+                "Clone the repo and run its script (tor-party-line.sh, \
+                 i2p-party-line.sh, or rns-party-line.sh). When a room opens, paste \
+                 the address and shared secret from the invite. The script takes care \
+                 of dependencies, audio setup, and encryption.",
             )
             .para(
                 "Web rooms do not need a client at all. Just open the link in any browser.",
@@ -639,7 +640,7 @@ fn wiki_topic(topic: &str) -> Option<Doc> {
             .para(
                 "The party-line client runs on Android phones through Termux. Install \
                  Termux from F-Droid (not the Play Store version, which is outdated), \
-                 then clone the client repo and run partyline.sh inside Termux.",
+                 then clone the client repo and run the transport script inside Termux.",
             )
             .para(
                 "Full walkthrough with screenshots: \
@@ -816,7 +817,7 @@ mod tests {
     }
 
     #[test]
-    fn broadcast_carries_the_partyline_sh_link_so_joiners_know_how_to_connect() {
+    fn broadcast_carries_the_transport_script_link_so_joiners_know_how_to_connect() {
         let b = utc_broadcast(&policy(), &room());
         assert!(
             b.body.plain().contains(Transport::Tor.client_url()),
@@ -826,11 +827,13 @@ mod tests {
     }
 
     #[test]
-    fn a_web_broadcast_carries_no_partyline_sh_link() {
+    fn a_web_broadcast_carries_no_transport_script_link() {
         let b = utc_broadcast(&both_policy(), &web_room());
         assert!(
-            !b.body.plain().contains("partyline.sh"),
-            "a web room has nothing to do with tor-party-line: {}",
+            !b.body.plain().contains("tor-party-line.sh")
+                && !b.body.plain().contains("i2p-party-line.sh")
+                && !b.body.plain().contains("rns-party-line.sh"),
+            "a web room has nothing to do with transport scripts: {}",
             b.body.plain()
         );
     }

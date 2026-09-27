@@ -160,13 +160,13 @@ _direct_up() {
         *i2p*)
             _log "starting i2p relay"
             ( trap 'kill $(jobs -p) 2>/dev/null' EXIT
-              tail -f /dev/null | "$_dir/partyline.sh" relay
+              tail -f /dev/null | "$_dir/i2p-party-line.sh" relay
             ) >"$_lf" 2>&1 &
             ;;
         *reticulum*|*rns*)
             _log "starting reticulum reflector"
             ( trap 'kill $(jobs -p) 2>/dev/null' EXIT
-              tail -f /dev/null | "$_dir/docker-entrypoint.sh" bash "$_dir/partyline.sh" relay
+              tail -f /dev/null | "$_dir/docker-entrypoint.sh" bash "$_dir/rns-party-line.sh" relay
             ) >"$_lf" 2>&1 &
             ;;
         *)

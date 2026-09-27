@@ -78,7 +78,7 @@ concurrency = 8
 # compose/docker-compose.tor.yml, compose/docker-compose.i2p.yml and
 # compose/docker-compose.rns.yml.
 #
-# Every party line needs the matching build of the partyline.sh client at the
+# Every party line needs the matching build of the transport script client at the
 # other end. The broadcast says which one and links it, so a subscriber who
 # types a command they have no client for finds that out in the message rather
 # than after a failed call.

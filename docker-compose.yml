@@ -41,7 +41,11 @@
 
 services:
   partylinepagerd:
-    build: .
+    build:
+      context: .
+      args:
+        CARGO_BUILD_JOBS: "${CARGO_BUILD_JOBS:-2}"
+        CMAKE_BUILD_PARALLEL_LEVEL: "${CMAKE_BUILD_PARALLEL_LEVEL:-2}"
     restart: unless-stopped
     # Run as you, not as root, so everything written into ./config/state belongs to
     # the user who owns this directory and the whole thing stays movable

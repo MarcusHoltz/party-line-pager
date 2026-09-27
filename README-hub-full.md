@@ -58,7 +58,7 @@ docker run -d \
 4. Config files are written to `/config` automatically
 5. Start the daemon from the wizard menu
 
-About five minutes of configuration, then `docker compose up -d` pulls the ~1.1GB image. Nothing compiles: the full image ships prebuilt.
+About five minutes of configuration, then a 20+ minute first build you can walk away from.
 
 ## Quick Start: Headless Daemon
 
@@ -166,11 +166,10 @@ docker exec partylinepager partylinepagerctl --state /config/state roster
 
 Three transports, same encryption, same TUI:
 
-| Project | Transport | Image |
-| --- | --- | --- |
-| Tor Party Line | Tor hidden services | [`marcusholtz/tor-party-line`](https://hub.docker.com/r/marcusholtz/tor-party-line) |
-| I2P Party Line | I2P garlic routing | [`marcusholtz/i2p-party-line`](https://hub.docker.com/r/marcusholtz/i2p-party-line) |
-| Reticulum Party Line | Reticulum mesh | [`marcusholtz/reticulum-party-line`](https://hub.docker.com/r/marcusholtz/reticulum-party-line) |
+| | | |
+|---|---|---|
+| [![Tor Party Line](https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/header/header--partyline--tor-onion-router-overlay-network.jpg)](https://gitlab.com/MarcusHoltz/tor-party-line) | [![I2P Party Line](https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/header/header--partyline--invisible-internet-project-i2p-garlic-roter.jpg)](https://gitlab.com/MarcusHoltz/i2p-party-line) | [![Reticulum Party Line](https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/header/header--partyline--reticulum-network-stack.jpg)](https://gitlab.com/MarcusHoltz/reticulum-party-line) |
+| [Tor Party Line](https://gitlab.com/MarcusHoltz/tor-party-line) | [I2P Party Line](https://gitlab.com/MarcusHoltz/i2p-party-line) | [Reticulum Party Line](https://gitlab.com/MarcusHoltz/reticulum-party-line) |
 
 PartylinePager orchestrates all three (plus WebRTC) and fans credentials across nine chat networks.
 

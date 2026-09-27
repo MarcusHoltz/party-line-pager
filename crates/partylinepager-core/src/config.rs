@@ -114,7 +114,7 @@ pub struct Fanout {
 ///
 /// All three party lines are the same program over a different network. A
 /// caller always gets an address and a shared secret and dials them with
-/// `partyline.sh`. Only four things differ between the three, and all four are
+/// the transport script. Only four things differ between the three, and all four are
 /// on this enum: what a valid address looks like, where the client is
 /// downloaded from, what to call the address in a message, and whether the
 /// room takes long enough to come up that the host needs an "on it" reply.
@@ -214,7 +214,7 @@ impl Transport {
         match self {
             // Base32, RFC 4648 lowercase alphabet.
             Transport::Tor | Transport::I2p => c.is_ascii_lowercase() || ('2'..='7').contains(&c),
-            // Lowercase hex. `partyline.sh` accepts uppercase and folds it, but
+            // Lowercase hex. The transport script accepts uppercase and folds it, but
             // the bridge only ever emits lowercase, so anything else here means
             // the hook is misbehaving.
             Transport::Reticulum => c.is_ascii_digit() || ('a'..='f').contains(&c),
@@ -1053,7 +1053,7 @@ mod tests {
             (Transport::I2p, "jhqkryidp2cyfcil.b32.i2p"),
             (Transport::Reticulum, ""),
             (Transport::Reticulum, "3a1c9d4e"),
-            // Uppercase hex: partyline.sh folds it on input, but the bridge
+            // Uppercase hex: the transport script folds it on input, but the bridge
             // only ever emits lowercase, so this means a broken hook.
             (Transport::Reticulum, "3A1C9D4E07B21F88C2A04E7D612B0F4E"),
             // Hex has no letters past f.

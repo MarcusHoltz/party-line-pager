@@ -17,7 +17,7 @@
 # [provider.tor] or [provider.i2p] for that.
 #
 # Reachability also rides on public transport nodes run by volunteers (RNS_HUBS
-# in party-lines/reticulum-party-line/partyline.sh). Nothing has to be forwarded
+# in party-lines/reticulum-party-line/rns-party-line.sh). Nothing has to be forwarded
 # or opened, but the route is somebody else's infrastructure.
 #
 # Defaults to transports/reticulum-party-line/ (published image, no checkout
