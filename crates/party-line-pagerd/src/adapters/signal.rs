@@ -40,6 +40,13 @@ pub struct Signal {
 
 impl Signal {
     pub fn new(cfg: &config::Signal) -> Result<Self> {
+        if !is_e164(&cfg.number) {
+            return Err(anyhow!(
+                "[signal] number {:?} is not E.164: a plus, then 7 to 15 digits, no spaces, \
+                 like +15551234567",
+                cfg.number
+            ));
+        }
         Ok(Self {
             rest_url: cfg.rest_url.trim_end_matches('/').to_string(),
             number: cfg.number.clone(),
@@ -125,6 +132,12 @@ struct DataMessage {
     /// Present when the message went to a group rather than to the bot.
     #[serde(default, rename = "groupInfo")]
     group_info: Option<serde_json::Value>,
+}
+
+fn is_e164(number: &str) -> bool {
+    number.strip_prefix('+').is_some_and(|digits| {
+        (7..=15).contains(&digits.len()) && digits.bytes().all(|b| b.is_ascii_digit())
+    })
 }
 
 /// The websocket URL for `/v1/receive/{number}`, `rest_url`'s scheme swapped
@@ -236,6 +249,18 @@ mod tests {
             "every request has to name the software; some servers reject anonymous \
              clients before reading anything else: {request}"
         );
+    }
+
+    #[test]
+    fn a_number_that_is_not_e164_is_refused_at_startup() {
+        for bad in ["+1 8352689179", "18352689179", "+1555", "+1555123456789012", "+1555abc4567", ""] {
+            let cfg = config::Signal {
+                enabled: true,
+                rest_url: "http://signal-cli-rest-api:8080".into(),
+                number: bad.into(),
+            };
+            assert!(Signal::new(&cfg).is_err(), "{bad:?} should be refused");
+        }
     }
 
     #[test]

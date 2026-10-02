@@ -21,14 +21,28 @@ services:
     depends_on:
       - signal-cli-rest-api
 
+  # Docker creates a missing bind-mount source as root, and the image runs as
+  # signal-api (uid 1000), so a fresh clone would crash-loop on "permission
+  # denied". This one-shot fixes the ownership before the API starts.
+  signal-cli-init:
+    image: bbernhard/signal-cli-rest-api:latest
+    user: "0:0"
+    entrypoint: ["chown", "-R", "1000:1000", "/home/.local/share/signal-cli"]
+    restart: "no"
+    volumes:
+      - ./config/signal-cli:/home/.local/share/signal-cli
+
   signal-cli-rest-api:
     image: bbernhard/signal-cli-rest-api:latest
     restart: unless-stopped
+    depends_on:
+      signal-cli-init:
+        condition: service_completed_successfully
     environment:
       MODE: "json-rpc"
     volumes:
       # The linked-device identity. Losing this means re-registering the
       # number, so it moves with the project like everything else.
-      - ../config/signal-cli:/home/.local/share/signal-cli
+      - ./config/signal-cli:/home/.local/share/signal-cli
     expose:
       - "8080"

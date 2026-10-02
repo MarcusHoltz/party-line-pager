@@ -23,4 +23,4 @@ services:
     environment:
       MATRIX_PASSWORD: "${MATRIX_PASSWORD:-}"
     volumes:
-      - ../config/matrix-store:/var/lib/party-line-pager/matrix
+      - ./config/matrix-store:/var/lib/party-line-pager/matrix

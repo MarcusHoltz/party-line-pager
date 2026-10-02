@@ -181,6 +181,18 @@ unquote() { local s=$1; s="${s%\"}"; s="${s#\"}"; printf '%s' "$s"; }
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
+urlencode() {
+    local s=$1 out="" c i LC_ALL=C
+    for (( i = 0; i < ${#s}; i++ )); do
+        c=${s:i:1}
+        case $c in
+            [A-Za-z0-9._~-]) out+=$c ;;
+            *) printf -v c '%%%02X' "'$c"; out+=$c ;;
+        esac
+    done
+    printf '%s' "$out"
+}
+
 # Copies into $BACKUP_ROOT keeping the absolute path, and says where it went.
 backup_file() {
     local src=$1 dest="$BACKUP_ROOT$1"
@@ -1047,7 +1059,13 @@ configure_signal() {
     note "which this script loads whenever [signal] is switched on."
     note "After the build, use the Signal device link menu item to link a phone."
     blank
-    ask v "Bot's phone number, with country code" "${A[signal.number]:-+15555550100}"; A[signal.number]=$v
+    while true; do
+        ask v "Bot's phone number, with country code" "${A[signal.number]:-+15555550100}"
+        v=${v//[ ().-]/}
+        [[ $v =~ ^\+[0-9]{7,15}$ ]] && break
+        oops "Use the form +15551234567: a plus, the country code, then digits only."
+    done
+    A[signal.number]=$v
     A[signal.rest_url]="http://signal-cli-rest-api:8080"
     A[signal.enabled]=true
 }
@@ -1178,6 +1196,8 @@ providers_toggle_menu() {
         case $c in
             b|B|"") break ;;
             [0-9]*)
+                [[ $c =~ ^[0-9]+$ ]] || continue
+                c=$((10#$c))
                 (( c >= 1 && c <= ${#order[@]} )) || continue
                 p="${order[c-1]}"
                 if uses_provider "$p"; then
@@ -1215,7 +1235,7 @@ providers_toggle_menu() {
 # (image mode is the primary path).
 clone_party_line() {
     local pl=$1 name dir repo
-    name="${PARTYLINE_NAMES[$pl]}"
+    name="${PARTYLINE_NAMES[$pl]:-}"
     [[ -n $name ]] || return 0
     [[ -f "$ROOT/transports/$name/docker-compose.yml" ]] && return 0
     dir="${PARTYLINE_DIRS[$pl]:-}"
@@ -1226,8 +1246,12 @@ clone_party_line() {
     warn "./${dir#"$ROOT/"} is not checked out and no transport image is available."
     if confirm "Clone it now?"; then
         local target="$ROOT/party-lines/$name"
-        git clone "$repo" "$target" && good "Cloned." || oops "Clone failed."
-        PARTYLINE_DIRS[$pl]="$target"
+        if git clone "$repo" "$target"; then
+            good "Cloned."
+            PARTYLINE_DIRS[$pl]="$target"
+        else
+            oops "Clone failed."
+        fi
     fi
 }
 
@@ -1518,6 +1542,7 @@ build_and_start() {
     # would leave the daemon unable to write into its own bind mounts.
     mkdir -p "$STATE_DIR"
     adapter_on matrix && mkdir -p "$MATRIX_STORE_DIR"
+    adapter_on signal && mkdir -p "$CONFIG_DIR/signal-cli"
     dc up -d --remove-orphans || { blank; oops "Start failed."; pause; return; }
     blank
     good "Running."
@@ -1880,6 +1905,30 @@ show_qr() {
     fi
 }
 
+have_qr_viewer() { have chafa || have viu || have timg; }
+
+# Offer to install chafa with the host package manager. Shows the exact
+# command first and runs nothing without a yes.
+offer_chafa_install() {
+    local -a cmd sudo=()
+    if (( EUID != 0 )); then
+        have sudo || return 1
+        sudo=(sudo)
+    fi
+    if have apt-get; then cmd=("${sudo[@]}" apt-get install -y chafa)
+    elif have dnf; then cmd=("${sudo[@]}" dnf install -y chafa)
+    elif have pacman; then cmd=("${sudo[@]}" pacman -S --noconfirm chafa)
+    elif have zypper; then cmd=("${sudo[@]}" zypper install -y chafa)
+    elif have apk; then cmd=("${sudo[@]}" apk add chafa)
+    elif have brew; then cmd=(brew install chafa)
+    else return 1
+    fi
+    warn "No terminal image viewer found, needed to show the QR in this terminal."
+    note "Would run: ${cmd[*]}"
+    confirm "Install chafa now?" || return 1
+    "${cmd[@]}"
+}
+
 signal_link_menu() {
     title "Signal device link"
     blank
@@ -1891,6 +1940,7 @@ signal_link_menu() {
 
     say "Starting the signal-cli container."
     blank
+    mkdir -p "$CONFIG_DIR/signal-cli"
     dc up -d signal-cli-rest-api >/dev/null 2>&1
     sleep 3
 
@@ -1898,9 +1948,14 @@ signal_link_menu() {
     ask name "Name for this device, as it appears in your linked devices list" "party-line-pager"
     mkdir -p "$STATE_DIR"
 
+    if ! have_qr_viewer; then
+        blank
+        offer_chafa_install || true
+    fi
+
     blank
     say "Fetching the link code."
-    if ! signal_api "/v1/qrcodelink?device_name=$name" "$png"; then
+    if ! signal_api "/v1/qrcodelink?device_name=$(urlencode "$name")" "$png"; then
         blank
         oops "Could not reach the signal-cli container."
         note "Check it is up: docker compose ps signal-cli-rest-api"
