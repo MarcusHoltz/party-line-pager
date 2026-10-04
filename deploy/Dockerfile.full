@@ -115,7 +115,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     && rm -rf /var/lib/apt/lists/*
 
 # Reticulum python deps + Apprise for fanout.
-RUN pip install --no-cache-dir --break-system-packages rns==1.5.4 lxmf==1.1.1 apprise==1.13.1 \
+RUN pip install --no-cache-dir --break-system-packages rns==1.4.2 lxmf==1.1.1 apprise==1.13.1 \
  && apt-get purge -y --auto-remove python3-pip \
  && rm -rf /var/lib/apt/lists/*
 
@@ -145,7 +145,8 @@ RUN chmod +x /opt/tor-party-line/docker/entrypoint.sh \
              /opt/i2p-party-line/i2p-party-line.sh \
              /opt/reticulum-party-line/docker/entrypoint.sh \
              /opt/reticulum-party-line/rns-party-line.sh \
- && ln -s /opt/tor-party-line/tor-party-line.sh /tor-party-line.sh
+ && ln -s /opt/tor-party-line/tor-party-line.sh /tor-party-line.sh \
+ && sed -i 's/_TIMEOUT=180/_TIMEOUT=300/' /opt/tor-party-line/docker/entrypoint.sh
 
 # Hooks, wizard, example configs.
 COPY hooks /opt/party-line-pager/hooks
@@ -167,14 +168,34 @@ RUN mkdir -p /var/lib/tor/hidden_service /data/.partyline \
 # Reticulum user (uid 1000) for the reflector process.
 RUN useradd -m -u 1000 partyline 2>/dev/null || true
 
+# RNS data dirs: /app/data matches the upstream Dockerfile's DATA_DIR default
+# so rns-party-line.sh and provider-rns.sh both find the destination file at
+# /app/data/destination without extra env overrides.
+RUN mkdir -p /app/data \
+    && chown partyline:partyline /app /app/data
+
 # Runtime env.
+#
+# DOCKER_MODE=1 is critical. All three upstream scripts check this variable
+# (defaults to 0). Without it the scripts enter native/script mode: they
+# prompt "Install dependencies now? [Y/n]:" which blocks relay startup in a
+# container, and they use host-local paths instead of container paths. Each
+# upstream Dockerfile sets ENV DOCKER_MODE=1; this image must do the same
+# because it builds from debian:trixie-slim, not from the upstream images.
 ENV PARTY_LINE_PAGER_RUNTIME=direct
+ENV DOCKER_MODE=1
 ENV SIGNAL_CLI_REST_API_PLUGIN_SHARED_OBJ_DIR=/usr/local/bin/
 ENV TOR_PARTYLINE_DIR=/opt/tor-party-line
 ENV I2P_PARTYLINE_DIR=/opt/i2p-party-line
 ENV RETICULUM_PARTYLINE_DIR=/opt/reticulum-party-line
+ENV I2PD_CERTSDIR=/usr/share/i2pd/certificates
 ENV LANG=C.UTF-8
 ENV TERM=xterm
+
+ARG PLP_VERSION=0.1.0
+LABEL org.opencontainers.image.version="${PLP_VERSION}" \
+      org.opencontainers.image.title="party-line-pager-full" \
+      org.opencontainers.image.description="PartyLinePager all-in-one image"
 
 EXPOSE 7681
 

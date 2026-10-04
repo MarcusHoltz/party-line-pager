@@ -70,6 +70,81 @@ from the relay's output and pass it back to the daemon as JSON.
 The daemon validates the address format for the network type,
 never trusting the hook's output blindly.
 
+## DOCKER_MODE
+
+All three scripts check `DOCKER_MODE` (defaults to `0`).
+When `1`:
+
+- Dependency install prompts are skipped (packages are
+  already in the image)
+- Daemon management is deferred to the entrypoint (tor/i2pd
+  already started externally)
+- Paths point to container-standard locations:
+  - tor: `/data/.partyline`, `/var/lib/tor`
+  - i2p: `/data/.partyline`
+  - rns: `/app/data` (persistent), `/dev/shm/partyline-$$`
+    (ephemeral)
+
+When `0` (the default), the scripts enter native/script
+mode: they prompt interactively for missing packages, manage
+daemons themselves, and use user-local paths.
+
+Each upstream Dockerfile sets `ENV DOCKER_MODE=1`. The
+published Docker Hub images inherit this, so compose-mode
+deployments (pulling `marcusholtz/*-party-line:latest`) get
+it automatically.
+
+**`deploy/Dockerfile.full` must also set it.** The full
+image builds from `debian:trixie-slim` (not from the
+upstream images), clones the scripts, and runs them in
+direct mode. Without `DOCKER_MODE=1` the scripts block on
+"Install dependencies now? [Y/n]:" inside the container,
+which hangs relay startup with no visible error in logs.
+
+Any custom Dockerfile that bundles these scripts must set
+`ENV DOCKER_MODE=1` or the relay will not start.
+
+## Upstream versions
+
+All three scripts are at version 2.1.0 (as of 2026-10-03).
+Published Docker Hub images:
+
+| Image | RNS lib | Base |
+|---|---|---|
+| `marcusholtz/tor-party-line:latest` | n/a | `debian:trixie-slim` |
+| `marcusholtz/i2p-party-line:latest` | n/a | `debian:trixie-slim` |
+| `marcusholtz/reticulum-party-line:latest` | 1.4.2 | `python:3.12-slim` |
+
+`deploy/Dockerfile.full` must pin the same `rns==` version
+as the upstream reticulum-party-line Dockerfile. A mismatch
+means the full image runs upstream's `rns-party-line.sh`
+against a different RNS library than the script was tested
+with.
+
+The Dockerfile also bumps the upstream tor entrypoint's
+bootstrap timeout from 180s to 300s. On a cold start Tor
+needs to download ~9000 microdescriptors, which can take 5-7
+minutes on a slow link. Combined with `plp-runtime.sh`'s
+retry logic (see [provider hooks](../reference/provider-hooks.md)),
+a cold start still succeeds.
+
+## Relay tuning
+
+All three scripts expose relay-side env vars for anti-flood
+and liveness control. The transport compose files in
+`transports/` pass these through so operators can override
+them in `.env` without editing the compose files:
+
+| Variable | Default | Controls |
+|---|---|---|
+| `RELAY_IDLE_TIMEOUT` | 240 | Drop a caller after N seconds of silence |
+| `RELAY_MAX_MSG_PER_SEC` | 15 | Per-caller message rate limit |
+| `RELAY_MAX_INFLIGHT` | 64 | Cap concurrent FIFO-forward writes |
+| `RELAY_WRITE_TIMEOUT` | 30 | Abandon a stalled write after N seconds |
+| `MAX_LINE_BYTES` | 524288 | Drop inbound lines exceeding this size |
+
+These defaults are the same across all three scripts.
+
 ## Upstream issues
 
 Things found while building PartyLinePager that belong upstream

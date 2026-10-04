@@ -342,14 +342,20 @@ push-registries:
   script:
     - |
       if [ -z "${RELEASE_VERSION:-}" ]; then
-        echo "ERROR: Set RELEASE_VERSION when running this pipeline"
-        echo "       (e.g. 1.0.0, no v prefix)"
-        exit 1
+        if [ -f VERSION ]; then
+          RELEASE_VERSION="$(cat VERSION | tr -d '[:space:]')"
+          echo "RELEASE_VERSION not set, using VERSION file: ${RELEASE_VERSION}"
+        else
+          echo "ERROR: Set RELEASE_VERSION when running this pipeline"
+          echo "       (e.g. 1.0.0, no v prefix), or add a VERSION file"
+          exit 1
+        fi
       fi
 
     # Docker Hub namespace: use DOCKERHUB_USERNAME if set,
     # otherwise fall back to the GitLab project namespace.
     - DH_NS="${DOCKERHUB_USERNAME:-$CI_PROJECT_NAMESPACE}"
+    - DH_NS=$(echo "$DH_NS" | tr '[:upper:]' '[:lower:]')
     - FULL_IMAGE_DH="${DH_NS}/party-line-pager-full"
     - COMPOSE_IMAGE_DH="${DH_NS}/party-line-pager"
 
@@ -357,6 +363,7 @@ push-registries:
     - docker build -f deploy/Dockerfile.full
         --build-arg CARGO_BUILD_JOBS=1
         --build-arg CMAKE_BUILD_PARALLEL_LEVEL=1
+        --build-arg PLP_VERSION="${RELEASE_VERSION}"
         -t "${FULL_IMAGE_GL}:latest"
         -t "${FULL_IMAGE_GL}:${RELEASE_VERSION}"
         -t "${FULL_IMAGE_DH}:latest"
@@ -378,6 +385,7 @@ push-registries:
     - docker build
         --build-arg CARGO_BUILD_JOBS=1
         --build-arg CMAKE_BUILD_PARALLEL_LEVEL=1
+        --build-arg PLP_VERSION="${RELEASE_VERSION}"
         -t "${COMPOSE_IMAGE_GL}:latest"
         -t "${COMPOSE_IMAGE_GL}:${RELEASE_VERSION}"
         -t "${COMPOSE_IMAGE_DH}:latest"

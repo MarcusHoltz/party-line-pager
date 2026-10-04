@@ -33,6 +33,12 @@ services:
       DATA_DIR: /app/data
       RUNTIME_DIR: /dev/shm/partyline
       REFLECTOR_PORT: "4242"
+      RNS_LISTEN_HOST: "0.0.0.0"
       SHARED_SECRET_FILE: /run/secrets/shared_secret.txt
       TERM: "xterm"
+      RELAY_IDLE_TIMEOUT: "${RELAY_IDLE_TIMEOUT:-240}"
+      RELAY_MAX_MSG_PER_SEC: "${RELAY_MAX_MSG_PER_SEC:-15}"
+      RELAY_MAX_INFLIGHT: "${RELAY_MAX_INFLIGHT:-64}"
+      RELAY_WRITE_TIMEOUT: "${RELAY_WRITE_TIMEOUT:-30}"
+      MAX_LINE_BYTES: "${MAX_LINE_BYTES:-524288}"
     command: ["bash", "/app/src/rns-party-line.sh", "relay"]

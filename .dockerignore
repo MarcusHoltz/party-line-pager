@@ -37,3 +37,6 @@ Cargo.lock.bak
 /config/*
 !/config/policy.example.toml
 !/config/adapters.example.toml
+
+# Personal task tracking.
+/to-do

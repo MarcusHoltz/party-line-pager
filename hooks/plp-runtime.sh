@@ -148,25 +148,42 @@ _direct_up() {
     fi
 
     _name="$(basename "$_dir")"
+    _max_retries="${PLP_TRANSPORT_RETRIES:-1}"
     # Subshell + trap ensures tail is killed when the transport exits
     # or the subshell is signalled. $! captures the subshell PID.
+    # On non-zero exit, retries up to PLP_TRANSPORT_RETRIES (default 1).
     case "$_name" in
         *tor*)
             _log "starting tor relay via docker/entrypoint.sh"
             ( trap 'kill $(jobs -p) 2>/dev/null' EXIT
-              tail -f /dev/null | "$_dir/docker/entrypoint.sh" relay
+              _try=0
+              while [ "$_try" -le "$_max_retries" ]; do
+                  tail -f /dev/null | "$_dir/docker/entrypoint.sh" relay && break
+                  _try=$((_try + 1))
+                  [ "$_try" -le "$_max_retries" ] && echo "[plp-runtime] transport exited, retry $_try/$_max_retries in 5s" && sleep 5
+              done
             ) >"$_lf" 2>&1 &
             ;;
         *i2p*)
             _log "starting i2p relay"
             ( trap 'kill $(jobs -p) 2>/dev/null' EXIT
-              tail -f /dev/null | "$_dir/i2p-party-line.sh" relay
+              _try=0
+              while [ "$_try" -le "$_max_retries" ]; do
+                  tail -f /dev/null | "$_dir/i2p-party-line.sh" relay && break
+                  _try=$((_try + 1))
+                  [ "$_try" -le "$_max_retries" ] && echo "[plp-runtime] transport exited, retry $_try/$_max_retries in 5s" && sleep 5
+              done
             ) >"$_lf" 2>&1 &
             ;;
         *reticulum*|*rns*)
             _log "starting reticulum reflector"
             ( trap 'kill $(jobs -p) 2>/dev/null' EXIT
-              tail -f /dev/null | "$_dir/docker/entrypoint.sh" bash "$_dir/rns-party-line.sh" relay
+              _try=0
+              while [ "$_try" -le "$_max_retries" ]; do
+                  tail -f /dev/null | "$_dir/docker/entrypoint.sh" bash "$_dir/rns-party-line.sh" relay && break
+                  _try=$((_try + 1))
+                  [ "$_try" -le "$_max_retries" ] && echo "[plp-runtime] transport exited, retry $_try/$_max_retries in 5s" && sleep 5
+              done
             ) >"$_lf" 2>&1 &
             ;;
         *)

@@ -90,6 +90,11 @@ COPY --from=yopass-build /go/bin/yopass /usr/local/bin/yopass
 COPY hooks /opt/party-line-pager/hooks
 RUN chmod +x /opt/party-line-pager/hooks/*.sh
 
+ARG PLP_VERSION=0.1.0
+LABEL org.opencontainers.image.version="${PLP_VERSION}" \
+      org.opencontainers.image.title="party-line-pager" \
+      org.opencontainers.image.description="PartyLinePager modular image"
+
 RUN useradd -r -s /usr/sbin/nologin -d /nonexistent partyline
 USER partyline
 
