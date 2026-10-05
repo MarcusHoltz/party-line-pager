@@ -146,6 +146,28 @@ The file *is* the readiness signal: `rns_bridge.py` writes the
 destination hash only once the destination exists and is
 announced. The hook wipes any earlier copy before starting.
 
+### Relay tuning (all transports)
+
+The transport compose files in `transports/` pass relay-side
+env vars through from `.env`. These control anti-flood and
+liveness behavior:
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `RELAY_IDLE_TIMEOUT` | `240` | Drop a caller after N seconds of total silence |
+| `RELAY_MAX_MSG_PER_SEC` | `15` | Per-caller message rate limit (audio is ~1/s) |
+| `RELAY_MAX_INFLIGHT` | `64` | Cap concurrent FIFO-forward writes per caller |
+| `RELAY_WRITE_TIMEOUT` | `30` | Abandon a blocked write to a stalled client |
+| `MAX_LINE_BYTES` | `524288` | Drop inbound lines exceeding 512 KB |
+
+Defaults are identical across all three scripts and match the
+upstream `.env.example` documentation. Override in `.env` to
+tighten or relax limits without editing compose files.
+
+The Reticulum transport compose also sets `RNS_LISTEN_HOST`
+to `0.0.0.0` (the script's own default) so the reflector's
+TCPServerInterface binds all interfaces.
+
 ### Key wiping
 
 Each backend's keys normally survive restarts. Without wiping,
@@ -194,3 +216,25 @@ compose` directly. In compose mode, `PLP_COMPOSE_ARGS` passes
 extra flags (override files, profiles). In direct mode, the
 shim starts transport scripts directly and manages them with
 PID files and signal-based process tree collection.
+
+### Direct-mode retry
+
+In direct mode, if a transport exits non-zero the shim retries
+it automatically after a 5-second pause. The retry count is
+controlled by `PLP_TRANSPORT_RETRIES` (default `1`, meaning one
+retry after the initial attempt). This handles Tor cold-start
+bootstrap timeouts: the first attempt populates the descriptor
+cache, the retry bootstraps in seconds.
+
+The full image also bumps the upstream Tor entrypoint's
+bootstrap timeout from 180s to 300s via sed at build time.
+Combined with retry, a cold Tor start that takes up to 10
+minutes still succeeds.
+
+### Direct-mode port sharing
+
+All transports default to listen port 7777. In compose mode
+each container has its own network namespace. In direct mode
+they share localhost, so only one transport can run at a time
+per port. The daemon starts one transport per room request, so
+this is not a constraint in production.

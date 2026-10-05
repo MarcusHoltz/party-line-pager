@@ -299,6 +299,29 @@ when running the release workflow. The push-registries job
 is manual (click play). Uses `docker:29.8.0` with
 `docker:29.8.0-dind`.
 
+### Project version
+
+`version` under `[workspace.package]` in the repo-root
+`Cargo.toml` is the only place the project version is written
+down. Both release workflows fall back to it when no version
+is supplied, so a plain `cargo build --release` and a release
+tag agree by construction.
+
+Bumping it means two edits, not one: change `Cargo.toml`, then
+run `cargo update --workspace` (`hooks/update-cargo-deps.sh`
+menu item 6 does this among other things). Cargo records the
+version of all three workspace members in `Cargo.lock`, and
+`hooks/audit-cargo-deps.sh` runs `cargo deny --locked`, which
+fails if the lockfile is behind the manifest.
+
+The image label is the one thing that cannot read the manifest,
+because `Dockerfile` and `deploy/Dockerfile.full` both declare
+it in a final stage that never copies `Cargo.toml`. Both take
+`ARG PLP_VERSION` with no default and label the image
+`${PLP_VERSION:-unknown}`, so an unlabelled build says
+`unknown` instead of a number that quietly went stale. Only the
+release jobs pass the value.
+
 ### Pinned base image versions
 
 Both Dockerfiles pin base images to exact versions for

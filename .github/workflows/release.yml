@@ -90,8 +90,8 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to publish (e.g. 1.0.0, no v prefix)"
-        required: true
+        description: "Version to publish (e.g. 1.0.0, no v prefix). Leave blank to read from Cargo.toml."
+        required: false
         type: string
       dry_run:
         description: "Build only (dry run, no push)"
@@ -309,11 +309,23 @@ jobs:
           # PUSH_SELF: ${{ inputs.push_selfhosted }}
           # SELF_REG: ${{ inputs.selfhosted_registry }}
         run: |
+          if [ -z "$VERSION" ]; then
+            VERSION="$(sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml)"
+            if [ -n "$VERSION" ]; then
+              echo "VERSION not set, using Cargo.toml: ${VERSION}"
+            fi
+          fi
+          if [ -z "$VERSION" ]; then
+            echo "ERROR: Could not read the version out of Cargo.toml"
+            echo "       Set the version input manually (e.g. 1.0.0, no v prefix)"
+            exit 1
+          fi
           DH_NS=$(echo "$DH_NS" | tr '[:upper:]' '[:lower:]')
           GHCR_NS=$(echo "$GHCR_NS" | tr '[:upper:]' '[:lower:]')
           if [ "$DRY_RUN" = "true" ]; then
             echo "Dry run: building ${IMAGE} without pushing"
             echo "tags=${IMAGE}:${VERSION}" >> "$GITHUB_OUTPUT"
+            echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           TAGS=""
@@ -337,6 +349,7 @@ jobs:
             echo "tags<<EOF"
             echo "$TAGS"
             echo "EOF"
+            echo "version=${VERSION}"
           } >> "$GITHUB_OUTPUT"
 
       - name: Build and push
@@ -346,6 +359,7 @@ jobs:
           file: ${{ matrix.file }}
           push: ${{ !inputs.dry_run }}
           tags: ${{ steps.tags.outputs.tags }}
+          build-args: PLP_VERSION=${{ steps.tags.outputs.version }}
           cache-from: type=gha,scope=${{ matrix.scope }}
           cache-to: type=gha,mode=max,scope=${{ matrix.scope }}
 

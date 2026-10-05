@@ -38,6 +38,18 @@ file they write belongs to you rather than root. Without those
 set, the containers run as root and you need `sudo` to read
 your own roster. See `.env.example`.
 
+The full image does not need `.env` for this. Its entrypoint runs
+as root, because Tor and I2P need it, but it reads your uid from
+the owner of the mounted `./config`, hands that directory back to
+you before starting anything, and exports the uid so that every
+state file the daemon writes is chowned to you as it is written.
+The daemon itself still runs as root, because the Tor, I2P and
+Reticulum relays need it; root is the cost of those three room
+types, and the handover is what stops it costing you ownership.
+Pass `HOST_UID` and `HOST_GID` only when `./config` is not owned by
+you, such as a named volume left behind by an earlier root-run
+container, because then there is no owner to read the uid from.
+
 ## Moving to another machine
 
 ```sh

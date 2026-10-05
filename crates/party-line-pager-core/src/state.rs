@@ -331,6 +331,7 @@ impl Store {
             .truncate(false)
             .open(&path)
             .map_err(|e| Error::io(&path, e))?;
+        hand_to_host_user(&path);
         file.lock().map_err(|e| Error::io(&path, e))?;
         Ok(StoreGuard { _file: file })
     }
@@ -427,10 +428,58 @@ impl Store {
             tmp.sync_all().map_err(|e| Error::io(&tmp_path, e))?;
         }
 
+        hand_to_host_user(&tmp_path);
         fs::rename(&tmp_path, &final_path).map_err(|e| Error::io(&final_path, e))?;
         Ok(())
     }
 }
+
+/// Hands a state file to the host user, when this process happens to be root.
+///
+/// The full image runs the daemon as root, and has to: the tor, i2p and rns
+/// relay hooks chown their own state to a service user and setuid into it, so a
+/// daemon without privileges cannot bring up three of the four room types. But
+/// the state directory is a bind mount of the host's `./config/state`, so a
+/// root-owned file in here is one the host user cannot read with their own
+/// tools, and the modular image, whose daemon runs as `HOST_UID`, cannot open
+/// at all.
+///
+/// Doing it once at startup would not help, because every write is
+/// write-to-temp plus rename: the inode is new each time, so the ownership is
+/// root again on the next save. It is applied to the temp file before the
+/// rename, so the final path never exists root-owned.
+///
+/// No-op unless this process is root, which covers the host and the modular
+/// image, and no-op when `HOST_UID` is unset or zero, which is what an operator
+/// who genuinely wants root-owned state gets.
+#[cfg(unix)]
+fn hand_to_host_user(path: &Path) {
+    use std::os::unix::fs::chown;
+
+    let Some(uid) = std::env::var("HOST_UID")
+        .ok()
+        .and_then(|v| v.parse::<u32>().ok())
+    else {
+        return;
+    };
+    if uid == 0 {
+        return;
+    }
+    let gid = std::env::var("HOST_GID")
+        .ok()
+        .and_then(|g| g.parse::<u32>().ok())
+        .unwrap_or(uid);
+    // Best effort, and no check on whether this process is root, because the
+    // kernel already draws that line: a process that is not root gets EPERM
+    // here unless the file is already its own, which is the modular image and
+    // the normal host, so this costs them one failed syscall per write. The data
+    // is written and renamed by the time we get here, so a refusal is not a
+    // reason to fail a save that already worked.
+    let _ = chown(path, Some(uid), Some(gid));
+}
+
+#[cfg(not(unix))]
+fn hand_to_host_user(_path: &Path) {}
 
 #[cfg(test)]
 mod tests {

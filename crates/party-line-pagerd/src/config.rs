@@ -230,34 +230,42 @@ impl Adapters {
     }
 
     /// Replaces every `env:NAME` value with the environment variable's contents.
+    ///
+    /// Only sections with `enabled = true` are walked. A section that is present
+    /// but switched off is inert, so `enabled = false` really does mean "off"
+    /// and does not drag its `env:NAME` into the resolution set. Without that
+    /// guard a stock `adapters.example.toml`, which documents every network
+    /// with `enabled = false` next to an `env:NAME` reference, could not be
+    /// loaded on a host that has none of those variables set, which is every
+    /// host that has not finished configuring itself.
     fn resolve_env(&mut self) -> Result<()> {
         let mut fields: Vec<&mut String> = Vec::new();
 
-        if let Some(t) = &mut self.telegram {
+        if let Some(t) = self.telegram.as_mut().filter(|a| a.enabled) {
             fields.push(&mut t.token);
         }
-        if let Some(m) = &mut self.matrix {
+        if let Some(m) = self.matrix.as_mut().filter(|a| a.enabled) {
             fields.push(&mut m.password);
         }
-        if let Some(i) = &mut self.irc {
+        if let Some(i) = self.irc.as_mut().filter(|a| a.enabled) {
             if let Some(password) = &mut i.password {
                 fields.push(password);
             }
         }
-        if let Some(x) = &mut self.xmpp {
+        if let Some(x) = self.xmpp.as_mut().filter(|a| a.enabled) {
             fields.push(&mut x.password);
         }
-        if let Some(m) = &mut self.mastodon {
+        if let Some(m) = self.mastodon.as_mut().filter(|a| a.enabled) {
             fields.push(&mut m.access_token);
         }
-        if let Some(e) = &mut self.email {
+        if let Some(e) = self.email.as_mut().filter(|a| a.enabled) {
             fields.push(&mut e.imap_password);
             fields.push(&mut e.smtp_password);
         }
-        if let Some(m) = &mut self.mattermost {
+        if let Some(m) = self.mattermost.as_mut().filter(|a| a.enabled) {
             fields.push(&mut m.access_token);
         }
-        if let Some(d) = &mut self.discord {
+        if let Some(d) = self.discord.as_mut().filter(|a| a.enabled) {
             fields.push(&mut d.token);
         }
 
@@ -385,6 +393,71 @@ mod tests {
         let err = Adapters::parse_str(
             r#"
             [telegram]
+            token = "env:PARTY_LINE_PAGER_DEFINITELY_UNSET"
+            "#,
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(err.contains("PARTY_LINE_PAGER_DEFINITELY_UNSET"), "{err}");
+    }
+
+    #[test]
+    fn a_switched_off_section_does_not_need_its_environment_variable() {
+        // `enabled = false` has to mean off. If it does not, a config that
+        // documents every network with an env: reference next to a disabled
+        // section cannot be loaded on a machine that has none of those
+        // variables, and startup dies naming a network the operator never
+        // asked for.
+        let adapters = Adapters::parse_str(
+            r#"
+            [telegram]
+            enabled = false
+            token = "env:PARTY_LINE_PAGER_DEFINITELY_UNSET"
+
+            [matrix]
+            enabled = false
+            homeserver = "https://matrix.example.org"
+            user = "bot"
+            password = "env:PARTY_LINE_PAGER_ALSO_UNSET"
+
+            [email]
+            enabled = false
+            imap_host = "imap.example.org"
+            imap_user = "bot"
+            imap_password = "env:PARTY_LINE_PAGER_ALSO_UNSET"
+            smtp_host = "smtp.example.org"
+            smtp_user = "bot"
+            smtp_password = "env:PARTY_LINE_PAGER_ALSO_UNSET"
+            from = "bot@example.org"
+            "#,
+        )
+        .unwrap();
+        assert!(adapters.enabled_names().is_empty());
+    }
+
+    #[test]
+    fn the_shipped_example_config_loads_with_nothing_configured() {
+        // The file a fresh fork is handed must parse on a host that has no
+        // credentials for any of the nine networks, and must come up with
+        // nothing switched on rather than asking for secrets.
+        let raw = include_str!("../../../config/adapters.example.toml");
+        let adapters = Adapters::parse_str(raw).unwrap();
+        assert!(
+            adapters.enabled_names().is_empty(),
+            "example config ships sections enabled: {:?}",
+            adapters.enabled_names()
+        );
+    }
+
+    #[test]
+    fn an_enabled_section_with_a_missing_secret_is_still_refused() {
+        // The other half of the guard above: switching a section on must put its
+        // secret back in play, or the fix above would have simply disabled
+        // resolution.
+        let err = Adapters::parse_str(
+            r#"
+            [telegram]
+            enabled = true
             token = "env:PARTY_LINE_PAGER_DEFINITELY_UNSET"
             "#,
         )

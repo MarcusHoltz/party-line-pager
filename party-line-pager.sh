@@ -205,6 +205,27 @@ backup_file() {
     fi
 }
 
+# Hands a file this script just wrote to the host user, when this script is
+# running as root inside a container. The full image runs the wizard as root
+# because its entrypoint needs root for Tor and I2P, but /config is a bind mount
+# of the host's ./config, so anything written from there lands root-owned on the
+# host: the host user can no longer edit their own config, and the modular image
+# cannot read it either, because that daemon runs as HOST_UID. No-op on the host,
+# where the script is never root, and no-op when HOST_UID is unset or zero, in
+# which case root really is what the operator asked for.
+own_written() {
+    local path uid gid
+    [[ $EUID -eq 0 ]] || return 0
+    uid=${ENVV[HOST_UID]:-}
+    gid=${ENVV[HOST_GID]:-}
+    [[ -n $uid && $uid != 0 ]] || return 0
+    for path in "$@"; do
+        [[ -e $path ]] || continue
+        chown "${uid}:${gid:-$uid}" "$path" 2>/dev/null \
+            || warn "Saved $path but could not hand it to ${uid}:${gid:-$uid}."
+    done
+}
+
 # --------------------------------------------------------------------------
 # Docker
 # --------------------------------------------------------------------------
@@ -303,6 +324,12 @@ _dc_direct() {
             # In V2 docker compose does this; in V1 we do it by hand.
             _dc_export_env
             local lf; lf="$(_daemon_log_file)"
+            # Started as whoever this script is running as, which in the full
+            # image is root and has to be: the tor, i2p and rns relay hooks
+            # chown their state to a service user and setuid into it, so an
+            # unprivileged daemon cannot bring up three of the four room types.
+            # State files are handed to the host user as the daemon writes them
+            # instead, in Store::save.
             party-line-pagerd \
                 --policy "$POLICY_FILE" \
                 --adapters "$ADAPTERS_FILE" \
@@ -434,6 +461,18 @@ declare -A ENVV
 
 load_env() {
     ENVV=()
+
+    # The full image's entrypoint works out the host uid/gid from the owner of
+    # the mounted config dir and exports them, but the wizard runs as root
+    # inside the container, so `id -u` cannot recover the host user by itself.
+    # Adopt the entrypoint's values here, without overriding what .env already
+    # set, so save_env carries them forward instead of dropping them the next
+    # time it rewrites the file.
+    if [[ -n ${HOST_UID:-} && ${HOST_UID:-0} != 0 && -z ${ENVV[HOST_UID]:-} ]]; then
+        ENVV[HOST_UID]=$HOST_UID
+        ENVV[HOST_GID]=${HOST_GID:-$HOST_UID}
+    fi
+
     [[ -f $ENV_FILE ]] || return 0
     local line key val
     while IFS= read -r line || [[ -n $line ]]; do
@@ -476,6 +515,7 @@ save_env() {
         done
     } > "$ENV_FILE"
     chmod 600 "$ENV_FILE"
+    own_written "$ENV_FILE"
 }
 
 # --------------------------------------------------------------------------
@@ -567,6 +607,7 @@ save_adapters() {
         fi
     } > "$ADAPTERS_FILE"
     chmod 600 "$ADAPTERS_FILE"
+    own_written "$ADAPTERS_FILE"
 }
 
 # --------------------------------------------------------------------------
@@ -747,6 +788,7 @@ save_policy() {
             [[ ${TIER_CLOSE[i]} == false ]] && echo 'may_close = false'
         done
     } > "$POLICY_FILE"
+    own_written "$POLICY_FILE"
 
     # policy.toml is read at startup only; a running daemon would otherwise
     # keep serving the pre-edit policy until someone remembered to restart it
@@ -890,7 +932,15 @@ identity_menu() {
     blank
 
     local uid gid dgid
-    uid=$(id -u); gid=$(id -g)
+    # Prefer the host uid the entrypoint derived over `id -u`: inside the full
+    # image the wizard runs as root, so `id -u` reports 0, and recording 0 as
+    # the host identity would leave everything this wizard writes root-owned.
+    if [[ -n ${ENVV[HOST_UID]:-} && ${ENVV[HOST_UID]} != 0 ]]; then
+        uid=${ENVV[HOST_UID]}
+        gid=${ENVV[HOST_GID]:-$uid}
+    else
+        uid=$(id -u); gid=$(id -g)
+    fi
     dgid=$(getent group docker 2>/dev/null | cut -d: -f3)
 
     say "Detected: uid $uid, gid $gid, docker group ${dgid:-none}"

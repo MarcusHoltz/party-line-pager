@@ -27,9 +27,16 @@ log() { echo "[entrypoint] $*"; }
 # ── 1. First-run setup ───────────────────────────────────────────────
 mkdir -p "$CONFIG_DIR" "$STATE_DIR"
 
+# Copy each example separately, not both under one test. Gating both on
+# policy.toml meant a volume that somehow had a policy but no adapters file
+# never got one, and the daemon then failed on a missing path instead of on a
+# missing credential, which is a much worse thing to hand somebody.
 if [ ! -f "$POLICY_FILE" ]; then
-    log "First run: copying example configs to $CONFIG_DIR"
+    log "First run: copying example policy.toml to $CONFIG_DIR"
     cp /opt/party-line-pager/policy.example.toml "$POLICY_FILE"
+fi
+if [ ! -f "$ADAPTERS_FILE" ]; then
+    log "First run: copying example adapters.toml to $CONFIG_DIR"
     cp /opt/party-line-pager/adapters.example.toml "$ADAPTERS_FILE"
 fi
 
@@ -217,10 +224,28 @@ fi
 # host bind mount, locking the user out of their own config dir.
 # Chown everything back to the caller's uid/gid so the files stay
 # theirs after the container exits.
+#
+# When HOST_UID is not passed, take it from the owner of the mounted config
+# dir instead: /config is a bind mount of the host's ./config, so its uid is
+# the host user. A fresh clone has that dir already, owned by whoever cloned
+# it. Without this fallback the wizard would detect uid 0 inside the
+# container, record that as the host identity, and every file it wrote would
+# stay root-owned, defeating the handover above.
+if [ -z "${HOST_UID:-}" ]; then
+    _derived_uid="$(stat -c %u "$CONFIG_DIR" 2>/dev/null || true)"
+    if [ -n "$_derived_uid" ] && [ "$_derived_uid" != "0" ]; then
+        HOST_UID="$_derived_uid"
+        HOST_GID="$(stat -c %g "$CONFIG_DIR" 2>/dev/null || true)"
+        HOST_GID="${HOST_GID:-$_derived_uid}"
+        log "HOST_UID not set, taking $HOST_UID:$HOST_GID from the owner of $CONFIG_DIR"
+    fi
+fi
 if [ -n "${HOST_UID:-}" ] && [ "${HOST_UID:-0}" != "0" ]; then
     _owner="${HOST_UID}:${HOST_GID:-$HOST_UID}"
     chown -R "$_owner" "$CONFIG_DIR" 2>/dev/null || true
     log "config ownership set to $_owner"
+
+    export HOST_UID HOST_GID
 fi
 
 # ── 3b. Start signal-cli-rest-api if Signal is configured ────────────
@@ -230,6 +255,11 @@ if [ -n "${SIGNAL_NUMBER:-}" ]; then
     if [ -n "$_sigapi" ]; then
         log "Starting signal-cli-rest-api in background (MODE=native)"
         mkdir -p "${CONFIG_DIR}/signal-cli"
+        # Created after section 3a already ran, so it would land root-owned on
+        # the host bind mount. signal-cli-rest-api itself runs as root and can
+        # write to a directory owned by somebody else, so hand this one over
+        # too rather than leaving it behind.
+        chown "${_owner:-0:0}" "${CONFIG_DIR}/signal-cli" 2>/dev/null || true
         MODE=native \
             SIGNAL_CLI_CONFIG_DIR="${CONFIG_DIR}/signal-cli" \
             "$_sigapi" &
@@ -241,6 +271,11 @@ if [ -n "${SIGNAL_NUMBER:-}" ]; then
 fi
 
 # ── 4. Headless mode ─────────────────────────────────────────────────
+# The daemon runs as root here, and has to: the tor, i2p and rns relays are
+# vendored scripts that chown their state to a service user and setuid into it,
+# so an unprivileged daemon cannot bring up three of the four room types. The
+# web provider needs no relay and would work either way. State files are handed
+# to the host user as they are written instead, in Store::save.
 if [ "$PLP_HEADLESS" = "1" ] && [ -f "$ADAPTERS_FILE" ]; then
     log "Headless mode: starting party-line-pagerd as PID 1"
     exec /usr/local/bin/party-line-pagerd \

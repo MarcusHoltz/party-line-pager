@@ -43,6 +43,51 @@ A **web-only instance needs no Docker socket**: leave
 out of your list. See
 [Compose Files](../configuration/compose-files.md#web-rooms-only-no-docker-socket).
 
+## What runs as root
+
+One answer per deployment.
+
+| Deployment | Daemon runs as | A compromised bot means |
+|---|---|---|
+| compose | `HOST_UID:HOST_GID` | that user |
+| full image | root | root in that container |
+
+The full image needs it. `tor-party-line.sh` chowns `/var/lib/tor` to
+`debian-tor` and its torrc carries `User debian-tor`, which needs
+privilege to switch uid; I2P and Reticulum are the same shape.
+Dropping privileges breaks three of the four room types, so the
+cost is paid in files instead. See
+[Container UIDs](state-files.md#container-uids).
+
+Check what you actually have:
+
+```sh
+docker exec party-line-pager ps -eo user,args | grep party-line-pagerd
+```
+
+```
+root     party-line-pagerd --policy /config/policy.toml ...
+```
+
+So `up` and `down` in `policy.toml` are a root-executed path: whatever
+they point at runs as root. Edit that file only on a host you trust.
+
+Files stay yours anyway. The entrypoint reads your uid from the owner
+of the mounted `./config`, and the daemon chowns each state file to
+that uid as it writes it:
+
+```sh
+docker exec party-line-pager ls -ln /config/state
+```
+
+```
+-rw-r--r-- 1 1000 1000  50 runtime.json
+-rw-r--r-- 1 1000 1000 167 subscribers.json
+```
+
+Leave `HOST_UID` unset, or set it to `0`, to keep state root-owned.
+
+
 ## Web room security
 
 A web room has no second factor. The URL is the credential.

@@ -177,6 +177,27 @@ docker exec party-line-pager party-line-pagerctl --state /config/state roster
 docker exec party-line-pager party-line-pagerctl --state /config/state pause
 ```
 
+### Who owns `./config`
+
+The wizard runs as root inside the container, because the entrypoint needs root
+for Tor and I2P. Everything it writes to `./config` is handed straight back to
+you: the entrypoint reads your uid from the owner of the mounted directory and
+exports it, and the daemon chowns each state file to that uid as it writes it.
+The config and state files stay editable with your own tools and readable by
+the modular image. You do not have to pass `HOST_UID` to get this.
+
+Pass `-e HOST_UID=$(id -u) -e HOST_GID=$(id -g)` when `./config` is not owned by
+you, such as a named volume created by an earlier root-run container, since
+there is then no owner to read the uid from. Leave `HOST_UID` unset, or set it
+to `0`, to keep state files root-owned on purpose.
+
+The daemon itself stays root, and cannot be anything else in this image: the
+Tor, I2P and Reticulum relays are vendored scripts that chown their own state
+to a service user and setuid into it, so a daemon without privileges cannot
+bring up three of the four room types. Root is what makes those features work,
+and the file handover above is what keeps it from costing you ownership of
+your own directory.
+
 ### Verifying a deployment
 
 ```sh
@@ -237,6 +258,23 @@ tab, no auto-triggers):
 
 A GitLab CI pipeline (`.gitlab-ci.yml`) mirrors the same flow.
 All jobs are manual (click to run in the Pipelines UI).
+
+### Where the version lives
+
+One place: `version` under `[workspace.package]` in the
+repo-root `Cargo.toml`. Nothing else holds a version literal.
+
+- Both binaries' `--version` and the `USER_AGENT` sent to
+  homeservers come from `CARGO_PKG_VERSION`, which Cargo takes from
+  that line, so they need no maintenance.
+- The `org.opencontainers.image.version` image label cannot read
+  `Cargo.toml` (the final image stage never copies it), so the release
+  workflows pass `PLP_VERSION` in from `Cargo.toml`. Builds that pass
+  no value, which is every local and CI-verify build, get the label
+  `unknown` rather than a stale number.
+- To bump: edit `Cargo.toml`, then run `cargo update --workspace` so
+  the three workspace entries in `Cargo.lock` match. Skipping that
+  makes `hooks/audit-cargo-deps.sh` fail its `--locked` check.
 
 Base images are pinned to exact versions. See
 [Building and Testing](docs/development/building-testing.md#cicd)

@@ -7,7 +7,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 # std::fs::File::lock (stabilized 1.89) is used instead of a locking crate.
 rust-version = "1.89"

@@ -4,14 +4,19 @@
 # written as `env:NAME` to read it from the environment instead, which is how
 # the compose file passes tokens without putting them on disk.
 #
-# Delete or set `enabled = false` on any section you do not use. Every section
-# is optional; a section that is present must be complete.
+# Every section below ships switched off, so this file loads on a machine that
+# has none of these credentials. To use a network: set `enabled = true` on its
+# section, fill in every field it lists, and make sure each `env:NAME` it
+# references exists in the environment the daemon runs in. A section that is
+# enabled but incomplete is refused at startup, naming the missing field.
+#
+# The web UI writes this file for you: menu, Adapters, pick a network.
 
 # ---------------------------------------------------------------------------
 # Telegram. Token from @BotFather. Talk to the bot in a private chat.
 # ---------------------------------------------------------------------------
 [telegram]
-enabled = true
+enabled = false
 token = "env:TELEGRAM_TOKEN"
 
 # ---------------------------------------------------------------------------
@@ -20,7 +25,7 @@ token = "env:TELEGRAM_TOKEN"
 # loses the device identity.
 # ---------------------------------------------------------------------------
 [matrix]
-enabled = true
+enabled = false
 homeserver = "https://matrix.example.org"
 user = "party-line-pager"
 password = "env:MATRIX_PASSWORD"
@@ -46,7 +51,7 @@ store_path = "/var/lib/party-line-pager/matrix"
 # find it. Channel traffic is never treated as a command.
 # ---------------------------------------------------------------------------
 [irc]
-enabled = true
+enabled = false
 server = "irc.libera.chat"
 port = 6697
 tls = true
@@ -59,7 +64,7 @@ channels = ["#your-channel"]
 # XMPP. A bare JID, not a full one: the resource is chosen at connect time.
 # ---------------------------------------------------------------------------
 [xmpp]
-enabled = true
+enabled = false
 jid = "party-line-pager@example.org"
 password = "env:XMPP_PASSWORD"
 # STARTTLS before logging in. Leave it alone: false sends the password over the
@@ -73,7 +78,7 @@ tls = true
 # sent with direct visibility.
 # ---------------------------------------------------------------------------
 [mastodon]
-enabled = true
+enabled = false
 base_url = "https://mastodon.example.org"
 access_token = "env:MASTODON_TOKEN"
 poll_interval = "30s"
@@ -83,7 +88,7 @@ poll_interval = "30s"
 # a mail client. Unseen messages are read and then marked seen.
 # ---------------------------------------------------------------------------
 [email]
-enabled = true
+enabled = false
 imap_host = "imap.example.org"
 imap_port = 993
 imap_user = "party-line-pager@example.org"
@@ -109,7 +114,7 @@ poll_interval = "60s"
 # open rather than polling, so there is no poll_interval to set here.
 # ---------------------------------------------------------------------------
 [signal]
-enabled = true
+enabled = false
 rest_url = "http://signal-cli-rest-api:8080"
 number = "+15555550100"
 
@@ -120,7 +125,7 @@ number = "+15555550100"
 # direct posts are treated as commands.
 # ---------------------------------------------------------------------------
 [mattermost]
-enabled = true
+enabled = false
 base_url = "https://mattermost.example.org"
 access_token = "env:MATTERMOST_TOKEN"
 
@@ -131,5 +136,5 @@ access_token = "env:MATTERMOST_TOKEN"
 # why the lobby server does not leak the roster.
 # ---------------------------------------------------------------------------
 [discord]
-enabled = true
+enabled = false
 token = "env:DISCORD_TOKEN"

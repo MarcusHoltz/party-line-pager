@@ -79,6 +79,15 @@ async fn main() -> Result<()> {
         // is the single most likely thing to be wrong and is otherwise
         // invisible until somebody opens a real room.
         let mut problems = Vec::new();
+        // Not fatal here or at run time, but it is the one thing a deploy gate
+        // should always catch, so it is reported as a problem rather than left
+        // to be noticed in production.
+        if adapter_config.enabled_names().is_empty() {
+            problems.push(format!(
+                "no chat adapter is enabled in {}, so nobody can talk to this daemon",
+                args.adapters.display()
+            ));
+        }
         for kind in policy.provider.configured() {
             let (up, down, extra) = match kind.transport() {
                 // A party line is two script paths and nothing else worth
@@ -129,11 +138,15 @@ async fn main() -> Result<()> {
 
     let transports = adapters::build(&adapter_config).await?;
     if transports.is_empty() {
-        // Without an adapter there is no way to subscribe and no way to open
-        // a room, so this is a configuration mistake rather than a mode.
-        anyhow::bail!(
-            "no chat adapters are enabled in {}, so nobody could talk to this daemon",
-            args.adapters.display()
+        // Without an adapter there is no way to subscribe and no way to open a
+        // room. That is a configuration mistake, but not a reason to exit: a
+        // fresh install has no adapters until somebody fills one in through the
+        // web UI, and a daemon that exits on every restart turns "not set up
+        // yet" into a restart loop that buries the real message. Warn loudly,
+        // stay up, and let --check be the gate that refuses to pass.
+        tracing::warn!(
+            adapters = %args.adapters.display(),
+            "no chat adapters are enabled, so nobody can talk to this daemon yet",
         );
     }
 

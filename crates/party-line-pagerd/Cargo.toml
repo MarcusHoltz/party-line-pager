@@ -44,7 +44,7 @@ lettre = { version = "0.11", default-features = false, features = [
     "ring",
     "webpki-roots",
 ] }
-matrix-sdk = { version = "0.18", default-features = false, features = [
+matrix-sdk = { version = "0.19", default-features = false, features = [
     "e2e-encryption",
     "bundled-sqlite",
 ] }

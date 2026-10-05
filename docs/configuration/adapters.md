@@ -16,6 +16,24 @@ Every adapter follows three rules:
 3. Its endpoint address is a stable identifier, not a display
    name
 
+## Turning a network off
+
+Every section in `config/adapters.example.toml` ships with
+`enabled = false`. Copy the file, then set `enabled = true` on
+the one or two networks you actually run and fill in only
+their credentials. A disabled section is skipped entirely, so
+its `env:` name does not have to be set. That is what lets an
+unconfigured stock config start cleanly and lets you add
+networks one at a time.
+
+The daemon runs with no network enabled. It logs a warning and
+stays up, because an instance with no chat network is a normal
+state during setup and exiting would only turn it into a
+restart loop that hides the real message. Run
+`party-line-pagerd --check` to find out whether anything is
+actually configured. It exits non-zero when no adapter is
+enabled, which makes it the right thing to gate a deploy on.
+
 ## Supported networks
 
 | Network | Endpoint format | Setup guide |

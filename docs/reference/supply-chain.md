@@ -101,12 +101,20 @@ git push
    update-cargo-deps.sh (menu item 6). That updates
    `Cargo.lock`, respects the cooldown gate, and re-audits.
 
-3. **If blocked (common):** the advisory fix requires a version
-   outside the semver range allowed by a parent dependency.
-   Example: `imbl-sized-chunks 0.2.0` is the fix, but
-   `imbl 6.1.0` pins `^0.1.3`. No amount of `cargo update`
-   can cross that boundary. The triage script offers to add
-   an ignore entry to `deny.toml`.
+3. **If blocked (common):** no lockfile change clears the
+   advisory. Two flavors:
+
+   - A parent dependency pins the fix out of reach. Example
+     shape: `imbl-sized-chunks 0.2.0` is the fix, but `imbl`
+     pinned `^0.1.3`. No amount of `cargo update` crosses a
+     semver boundary, only a new parent release does.
+   - The crate is unmaintained, so there is no fix to wait
+     for. Live example: `anymap2 0.13.0`, a hard dependency of
+     `matrix-sdk`, ignored as `RUSTSEC-2026-0319`. This one
+     clears only when `matrix-sdk` drops it.
+
+   The triage script offers to add an ignore entry to
+   `deny.toml`.
 
 4. **Commit and push** `deny.toml` (and `Cargo.lock` if
    updated). The CI pipeline will pass.
